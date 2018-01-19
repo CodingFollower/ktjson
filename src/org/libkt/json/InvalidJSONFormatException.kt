@@ -1,3 +1,3 @@
-package org.openkt.json
+package org.libkt.json
 
 class InvalidJSONFormatException(msg: String = "") : Exception(msg)

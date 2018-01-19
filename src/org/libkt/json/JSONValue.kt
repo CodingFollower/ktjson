@@ -1,4 +1,4 @@
-package org.openkt.json
+package org.libkt.json
 
 open class JSONValue constructor() {
     var type: JSONType = JSONType.UNKNOW

@@ -1,4 +1,4 @@
-import org.openkt.json.JSONObject
+import org.libkt.json.JSONObject
 
 fun main(args: Array<String>) {
     val str = """{
