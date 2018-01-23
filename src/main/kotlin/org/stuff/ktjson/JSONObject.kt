@@ -1,7 +1,7 @@
 package org.stuff.ktjson
 
-import java.io.ByteArrayInputStream
 import java.io.InputStream
+import java.nio.charset.Charset
 
 class JSONObject : JSONValue {
     private val map = HashMap<String, JSONValue>()
@@ -10,11 +10,13 @@ class JSONObject : JSONValue {
         type = JSONType.OBJECT
     }
 
-    constructor(text: String) : this(ByteArrayInputStream(text.toByteArray(Charsets.UTF_8)))
+    constructor(text: String, charset: Charset = Charsets.UTF_8) : super(JSONInputStreamReader(text, charset), true)
 
-    constructor(stream: InputStream) : this(JSONInputStreamReader(stream))
+    constructor(stream: InputStream, charset: Charset = Charsets.UTF_8) : super(JSONInputStreamReader(stream, charset), true)
 
-    internal constructor(reader: JSONInputStreamReader) {
+    internal constructor(reader: JSONInputStreamReader) : super(reader, false)
+
+    override fun parseInternal(reader: JSONInputStreamReader) {
         parseObject(reader)
         reader.readNextChar()
     }

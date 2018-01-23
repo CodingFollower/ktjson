@@ -16,11 +16,11 @@ private fun isSpace(ch: Char) : Boolean {
             || ch == '\n'
 }
 
-class JSONInputStreamReader(stream : InputStream, private val charset: Charset = Charsets.UTF_8) {
+internal class JSONInputStreamReader(stream : InputStream, private val charset: Charset = Charsets.UTF_8) {
     private val reader = InputStreamReader(stream, charset)
     private var lastReadValidChar: Char = (0).toChar()
 
-    val currentChar: Char
+    private val currentChar: Char
         get() {
             if (lastReadValidChar == (0).toChar()) {
                 readNextValidChar()
@@ -29,19 +29,23 @@ class JSONInputStreamReader(stream : InputStream, private val charset: Charset =
             return lastReadValidChar
         }
 
+    internal constructor(text: String, charset: Charset = Charsets.UTF_8)
+            : this(ByteArrayInputStream(text.toByteArray(charset)), charset)
+
     internal fun readJSONValue(): JSONValue {
         val ch = readFirstUnspaceChar()
         when(ch) {
             '{' -> return JSONObject(this)
             '[' -> return JSONArray(this)
-            else -> return JSONValue(this)
+            else -> return JSONValue(this, false)
         }
     }
 
     fun readNextValidValue(): String {
         val builder = StringBuilder()
+        readFirstUnspaceChar()
         do {
-            val ch = readFirstUnspaceChar()
+            val ch = currentChar
             if (isSpace(ch)
                     || (ch in jsonValueEncloseChars)) {
                 break
@@ -92,7 +96,7 @@ class JSONInputStreamReader(stream : InputStream, private val charset: Charset =
     }
 
     private fun unicodeToString(): String {
-        var buf = CharArray(4)
+        val buf = CharArray(4)
         readNextValidChars(buf)
 
         val str = String(buf)
@@ -116,7 +120,7 @@ class JSONInputStreamReader(stream : InputStream, private val charset: Charset =
     private fun readNextValidChar(): Char {
         val ch = readNextChar()
         if (ch == -1) {
-            throw IOException("Unexpect End")
+            throw InvalidJSONFormatException("Unexpect End")
         }
 
         return lastReadValidChar
@@ -146,6 +150,19 @@ class JSONInputStreamReader(stream : InputStream, private val charset: Charset =
             val ch = readNextValidChar()
             if (!isSpace(ch)) {
                 return ch
+            }
+        } while (true)
+    }
+
+    fun isLeftContainsUnspace() : Boolean {
+        do {
+            val ch = readNextChar()
+            if (ch == -1) {
+                return false
+            }
+
+            if (!isSpace(ch.toChar())) {
+                return true
             }
         } while (true)
     }
