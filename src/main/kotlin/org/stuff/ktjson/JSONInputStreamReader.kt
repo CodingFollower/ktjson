@@ -1,4 +1,4 @@
-package org.libkt.json
+package org.stuff.ktjson
 
 import com.sun.javaws.exceptions.InvalidArgumentException
 import java.io.*

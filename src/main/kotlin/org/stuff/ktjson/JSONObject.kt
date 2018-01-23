@@ -1,4 +1,4 @@
-package org.libkt.json
+package org.stuff.ktjson
 
 import java.io.ByteArrayInputStream
 import java.io.InputStream
