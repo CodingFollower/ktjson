@@ -8,21 +8,26 @@ import org.stuff.ktjson.JSONValue
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
+fun invalidJSONValue(invalid : Collection<String>) {
+    for (str in invalid) {
+        val msg = "\"$str\" should be invalid json value"
+        assertFailsWith<InvalidJSONFormatException>(msg){ JSONValue(str) }
+    }
+}
+
+fun<T> perform(list: Collection<T>, block: (T) -> Unit) {
+    for (str in list) {
+        block(str)
+    }
+}
+
+fun<T> perform(map: Map<String, T>, block: (String, T) -> Unit) {
+    for ((k, v) in map) {
+        block(k, v)
+    }
+}
 
 class JSONValueTest {
-    private fun invalidJSONValue(invalid : Collection<String>) {
-        for (str in invalid) {
-            val msg = "\"$str\" should be invalid json value"
-            assertFailsWith<InvalidJSONFormatException>(msg){ JSONValue(str) }
-        }
-    }
-
-    private fun<T> perform(list: Collection<T>, block: (T) -> Unit) {
-        for (str in list) {
-            block(str)
-        }
-    }
-
     @Test
     fun emptyTest() {
         invalidJSONValue(listOf(""))
@@ -34,7 +39,7 @@ class JSONValueTest {
             val v = JSONValue(it)
             assertEquals(v.type, JSONType.NULL)
             assertEquals(v.toString(), "null")
-            assertEquals(v.converToString(), "null")
+            assertEquals(v.convertToString(), "null")
 
             assertFailsWith<CastFailedException> { v.toBooleanValue() }
             assertFailsWith<CastFailedException> { v.toDoubleValue() }
@@ -43,12 +48,6 @@ class JSONValueTest {
         }
 
         invalidJSONValue(listOf("null null", "Null", "NULL"))
-    }
-
-    private fun<T> perform(map: Map<String, T>, block: (String, T) -> Unit) {
-        for ((k, v) in map) {
-            block(k, v)
-        }
     }
 
     @Test
@@ -60,7 +59,7 @@ class JSONValueTest {
 
             val str = if (expect) "true" else "false"
             assertEquals(str, v.toString())
-            assertEquals(str, v.converToString())
+            assertEquals(str, v.convertToString())
 
             assertFailsWith<CastFailedException> { v.toDoubleValue() }
             assertFailsWith<CastFailedException> { v.toIntegerValue() }
@@ -82,7 +81,7 @@ class JSONValueTest {
             assertEquals(expect.toDouble(), v.toDoubleValue())
 
             assertEquals("$expect", v.toString())
-            assertEquals("$expect", v.converToString())
+            assertEquals("$expect", v.convertToString())
 
             assertFailsWith<CastFailedException> { v.toBooleanValue() }
             assertFailsWith<CastFailedException> { v.toStringValue() }
@@ -99,7 +98,7 @@ class JSONValueTest {
             assertEquals(expect, v.toDoubleValue(), "str: ($k)")
 
             assertEquals("$expect", v.toString())
-            assertEquals("$expect", v.converToString())
+            assertEquals("$expect", v.convertToString())
 
             assertFailsWith<CastFailedException> { v.toIntegerValue() }
             assertFailsWith<CastFailedException> { v.toBooleanValue() }
@@ -113,20 +112,24 @@ class JSONValueTest {
         invalidJSONValue(listOf("01", "+1", "--1", "0.e1", "0.1e++0", "0.1e", "0x0a"))
     }
 
+    class StringExpect(val expect: String, val escaped: String = "\"$expect\"")
+
     @Test
     fun stringTest() {
-        perform(mapOf( "\"\"" to "", "\"Hello World\"" to "Hello World",
-                """"Hello \r\nWorld"""" to "Hello \r\nWorld",
-                """"Hello \"World"""" to "Hello \"World",
-                """"Hello \u002AWorld"""" to "Hello *World",
-                """"Hello \u002aWorld"""" to "Hello *World")) { k, expect ->
+        perform(mapOf("\"\"" to StringExpect(""),
+                "\"Hello World\"" to StringExpect("Hello World"),
+                """"Hello \r\nWorld"""" to StringExpect("Hello \r\nWorld", "\"Hello \\r\\nWorld\""),
+                """"Hello \"World"""" to StringExpect("Hello \"World", "\"Hello \\\"World\""),
+                """"Hello \u002AWorld"""" to StringExpect("Hello *World"),
+                """"Hello \u002aWorld"""" to StringExpect("Hello *World")))
+        { k, expect ->
             val v = JSONValue(k)
             assertEquals(JSONType.STRING, v.type)
 
-            assertEquals(expect, v.toStringValue(), "str: ($k)")
-            assertEquals(expect, v.converToString())
+            assertEquals(expect.expect, v.toStringValue(), "str: ($k)")
+            assertEquals(expect.expect, v.convertToString())
 
-            assertEquals("\"$expect\"", v.toString())
+            assertEquals(expect.escaped, v.toString())
 
             assertFailsWith<CastFailedException> { v.toIntegerValue() }
             assertFailsWith<CastFailedException> { v.toDoubleValue() }

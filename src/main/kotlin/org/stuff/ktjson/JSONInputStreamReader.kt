@@ -4,9 +4,12 @@ import com.sun.javaws.exceptions.InvalidArgumentException
 import java.io.*
 import java.nio.charset.Charset
 
-private val jsonControlMap = mapOf('\"' to '\"', '\\' to '\\', '/' to '/',
+internal val jsonControlMap = mapOf('\"' to '\"', '\\' to '\\', '/' to '/',
         'b' to '\b', 'f' to (12).toChar(),
         'n' to '\n', 'r' to '\r', 't' to '\t')
+internal val controlToCharMap = mapOf('\"' to '\"', '\\' to '\\', '/' to '/',
+        '\b' to 'b', (12).toChar() to 'f',
+        '\n' to 'n', '\r' to 'r', '\t' to 't')
 private val jsonValueEncloseChars = arrayOf('}', ']', ',')
 
 private fun isSpace(ch: Char) : Boolean {
@@ -35,9 +38,9 @@ internal class JSONInputStreamReader(stream : InputStream, private val charset: 
     internal fun readJSONValue(): JSONValue {
         val ch = readFirstUnspaceChar()
         when(ch) {
-            '{' -> return JSONObject(this)
-            '[' -> return JSONArray(this)
-            else -> return JSONValue(this, false)
+            '{' -> return JSONObject(this, true)
+            '[' -> return JSONArray(this, true)
+            else -> return JSONValue(this, true)
         }
     }
 

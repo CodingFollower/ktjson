@@ -3,7 +3,22 @@ package org.stuff.ktjson
 import java.nio.charset.Charset
 import java.util.regex.Pattern
 
-open class JSONValue internal constructor(reader: JSONInputStreamReader, checkEnd: Boolean){
+internal fun initJSON(reader: JSONInputStreamReader, ignoreLeft: Boolean, block: (JSONInputStreamReader) -> Unit) {
+    try {
+        block(reader)
+        if (!ignoreLeft && reader.isLeftContainsUnspace()) {
+            throw InvalidJSONFormatException()
+        }
+    }
+    catch (e: InvalidJSONFormatException) {
+        throw e
+    }
+    catch (e: Exception) {
+        throw InvalidJSONFormatException(e.toString())
+    }
+}
+
+open class JSONValue constructor() {
     var type: JSONType = JSONType.UNKNOW
         protected set
     private var booleanValue = false
@@ -12,24 +27,13 @@ open class JSONValue internal constructor(reader: JSONInputStreamReader, checkEn
     private var doubleValue: Double = 0.0
     private var intValue = 0
 
-    init {
-        try {
-            parseInternal(reader)
-            if (checkEnd && reader.isLeftContainsUnspace()) {
-                throw InvalidJSONFormatException()
-            }
-        }
-        catch (e: InvalidJSONFormatException) {
-            throw e
-        }
-        catch (e: Exception) {
-            throw InvalidJSONFormatException(e.toString())
-        }
+    internal constructor(reader: JSONInputStreamReader, ignoreLeft: Boolean) : this() {
+        initJSON(reader, ignoreLeft) { parseValue(it) }
     }
 
-    internal constructor(text: String, charset: Charset = Charsets.UTF_8) : this(JSONInputStreamReader(text, charset), true)
+    internal constructor(text: String, charset: Charset = Charsets.UTF_8) : this(JSONInputStreamReader(text, charset), false)
 
-    internal open fun parseInternal(reader: JSONInputStreamReader) {
+    private  fun parseValue(reader: JSONInputStreamReader) {
         val ch = reader.readFirstUnspaceChar()
         if (ch == '\"') {
             stringValue = reader.readString()
@@ -76,25 +80,39 @@ open class JSONValue internal constructor(reader: JSONInputStreamReader, checkEn
             JSONType.DOUBLE -> return "$doubleValue"
             JSONType.INTEGER -> return "$intValue"
             JSONType.BOOL -> return if (booleanValue) "true" else "false"
-            JSONType.STRING -> return "\"$stringValue\""
+            JSONType.STRING -> return "\"${escapeString()}\""
             else -> return super.toString()
         }
     }
 
-    private fun<T> toTypeValue(block: () -> T?) : T {
-        val v = block()
-        if (v != null) {
-            return v
+    private fun escapeString() : String {
+        if (stringValue.isEmpty()) {
+            return stringValue
         }
 
-        throw CastFailedException()
+        val builder = StringBuilder(stringValue.length)
+        for (ch in stringValue) {
+            if (controlToCharMap.containsKey(ch)) {
+                builder.append('\\')
+                builder.append(controlToCharMap[ch])
+            }
+            else {
+                builder.append(ch)
+            }
+        }
+
+        return builder.toString()
+    }
+
+    private fun<T> toTypeValue(block: () -> T?) : T {
+        return block() ?: throw CastFailedException()
     }
 
     internal fun toBooleanValue() : Boolean {
         return toTypeValue { optToBooleanValue() }
     }
 
-    internal fun optToBooleanValue() : Boolean? {
+    private fun optToBooleanValue() : Boolean? {
         return if (type == JSONType.BOOL) booleanValue else null
     }
 
@@ -102,7 +120,7 @@ open class JSONValue internal constructor(reader: JSONInputStreamReader, checkEn
         return toTypeValue { optToDoubleValue() }
     }
 
-    internal fun optToDoubleValue() : Double? {
+    private fun optToDoubleValue() : Double? {
         return if (type == JSONType.DOUBLE || type == JSONType.INTEGER) doubleValue else null
     }
 
@@ -110,7 +128,7 @@ open class JSONValue internal constructor(reader: JSONInputStreamReader, checkEn
         return toTypeValue { optToIntegerValue() }
     }
 
-    internal fun optToIntegerValue(): Int? {
+    private fun optToIntegerValue(): Int? {
         return if (type == JSONType.INTEGER) intValue else null
     }
 
@@ -118,11 +136,11 @@ open class JSONValue internal constructor(reader: JSONInputStreamReader, checkEn
         return toTypeValue { optToStringValue() }
     }
 
-    internal fun optToStringValue() : String? {
+    private fun optToStringValue() : String? {
         return if (type == JSONType.STRING) stringValue else null
     }
 
-    internal fun converToString() : String {
+    internal fun convertToString() : String {
         val v = optToStringValue()
         if (v != null) {
             return v

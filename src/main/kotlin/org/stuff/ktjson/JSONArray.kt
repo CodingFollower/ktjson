@@ -3,22 +3,28 @@ package org.stuff.ktjson
 import java.io.InputStream
 import java.nio.charset.Charset
 
-class JSONArray : JSONValue {
+class JSONArray constructor() : JSONValue() {
     private val array = ArrayList<JSONValue>()
+
+    val size: Int
+        get() = array.size
+
+    val isEmpty: Boolean
+        get() = array.isEmpty()
 
     init {
         type = JSONType.ARRAY
     }
 
-    constructor(text: String, charset: Charset = Charsets.UTF_8) : super(JSONInputStreamReader(text, charset), true)
+    constructor(text: String, charset: Charset = Charsets.UTF_8) : this(JSONInputStreamReader(text, charset), false)
 
-    constructor(stream: InputStream, charset: Charset = Charsets.UTF_8) : super(JSONInputStreamReader(stream, charset), true)
+    constructor(stream: InputStream, charset: Charset = Charsets.UTF_8) : this(JSONInputStreamReader(stream, charset), false)
 
-    internal constructor(reader: JSONInputStreamReader) : super(reader, false)
-
-    override fun parseInternal(reader: JSONInputStreamReader) {
-        parseArray(reader)
-        reader.readNextChar()
+    internal constructor(reader: JSONInputStreamReader, ignoreLeft: Boolean) : this() {
+        initJSON(reader, ignoreLeft) {
+            parseArray(reader)
+            reader.readNextChar()
+        }
     }
 
     private fun parseArray(reader: JSONInputStreamReader) {

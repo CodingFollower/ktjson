@@ -3,22 +3,28 @@ package org.stuff.ktjson
 import java.io.InputStream
 import java.nio.charset.Charset
 
-class JSONObject : JSONValue {
+class JSONObject constructor() : JSONValue() {
     private val map = HashMap<String, JSONValue>()
+
+    val allKeys: Set<String>
+        get() = map.keys
+
+    val isEmpty: Boolean
+        get() = allKeys.isEmpty()
 
     init {
         type = JSONType.OBJECT
     }
 
-    constructor(text: String, charset: Charset = Charsets.UTF_8) : super(JSONInputStreamReader(text, charset), true)
+    constructor(text: String, charset: Charset = Charsets.UTF_8) : this(JSONInputStreamReader(text, charset), false)
 
-    constructor(stream: InputStream, charset: Charset = Charsets.UTF_8) : super(JSONInputStreamReader(stream, charset), true)
+    constructor(stream: InputStream, charset: Charset = Charsets.UTF_8) : this(JSONInputStreamReader(stream, charset), false)
 
-    internal constructor(reader: JSONInputStreamReader) : super(reader, false)
-
-    override fun parseInternal(reader: JSONInputStreamReader) {
-        parseObject(reader)
-        reader.readNextChar()
+    internal constructor(reader: JSONInputStreamReader, ignoreLeft: Boolean): this() {
+        initJSON(reader, ignoreLeft) {
+            parseObject(reader)
+            reader.readNextChar()
+        }
     }
 
     private fun parseObject(reader: JSONInputStreamReader) {
@@ -63,10 +69,64 @@ class JSONObject : JSONValue {
         map[key] = reader.readJSONValue()
     }
 
+    fun contains(key: String): Boolean {
+        return key in allKeys
+    }
+
+    fun isNullForKey(key: String): Boolean {
+        return get(key).type == JSONType.NULL
+    }
+
+    fun getBoolean(key: String): Boolean {
+        return get(key).toBooleanValue()
+    }
+
+    fun getInteger(key: String): Int {
+        return get(key).toIntegerValue()
+    }
+
+    fun getDouble(key: String): Double {
+        return get(key).toDoubleValue()
+    }
+
+    fun getString(key: String): String {
+        return get(key).toStringValue()
+    }
+
+    fun getObject(key: String): JSONObject {
+        val v = get(key)
+        if (v.type != JSONType.OBJECT) {
+            throw CastFailedException()
+        }
+
+        return v as JSONObject
+    }
+
+    fun getArray(key: String): JSONArray {
+        val v = get(key)
+        if (v.type != JSONType.ARRAY) {
+            throw CastFailedException()
+        }
+
+        return v as JSONArray
+    }
+
+    private fun<T> getValue(key: String, block: (String) -> T? ): T {
+        return block(key) ?: throw KeyNotFoundException(key)
+    }
+
+    private fun get(key: String): JSONValue {
+        return getValue(key) { optGet(it) }
+    }
+
+    private fun optGet(key: String): JSONValue? {
+        return if (contains(key)) map[key] else null
+    }
+
     override fun toString(): String {
         val builder = StringBuilder()
         for ((key, value) in map) {
-            builder.append("\"$key\": $value,")
+            builder.append("\"$key\":$value,")
         }
 
         if (builder.isNotEmpty()) {
