@@ -1,18 +1,29 @@
 package org.stuff.ktjson
 
 import java.nio.charset.Charset
+import java.util.regex.Pattern
 
 open class JSONValue internal constructor(reader: JSONInputStreamReader, checkEnd: Boolean){
     var type: JSONType = JSONType.UNKNOW
         protected set
     private var booleanValue = false
     private var stringValue = ""
-    private var numberValue: Double = 0.0
+
+    private var doubleValue: Double = 0.0
+    private var intValue = 0
 
     init {
-        parseInternal(reader)
-        if (checkEnd && reader.isLeftContainsUnspace()) {
-            throw InvalidJSONFormatException()
+        try {
+            parseInternal(reader)
+            if (checkEnd && reader.isLeftContainsUnspace()) {
+                throw InvalidJSONFormatException()
+            }
+        }
+        catch (e: InvalidJSONFormatException) {
+            throw e
+        }
+        catch (e: Exception) {
+            throw InvalidJSONFormatException(e.toString())
         }
     }
 
@@ -42,10 +53,19 @@ open class JSONValue internal constructor(reader: JSONInputStreamReader, checkEn
 
     private fun initNumberValue(str: String) {
         try {
-            numberValue = java.lang.Double.valueOf(str)
-            type = JSONType.NUMBER
+            val  regex = """^-?(0|([1-9]\d*))(.\d+)?([e|E][+|-]?\d+)?$"""
+            if (!Pattern.matches(regex, str)) {
+                throw InvalidJSONFormatException()
+            }
+            doubleValue = java.lang.Double.valueOf(str)
+            type = JSONType.DOUBLE
+
+            intValue = doubleValue.toInt()
+            if (doubleValue.compareTo(intValue) == 0) {
+                type = JSONType.INTEGER
+            }
         }
-        catch (e: NumberFormatException) {
+        catch (e: Exception) {
             throw InvalidJSONFormatException(e.toString())
         }
     }
@@ -53,7 +73,8 @@ open class JSONValue internal constructor(reader: JSONInputStreamReader, checkEn
     override fun toString(): String {
         when(type) {
             JSONType.NULL -> return "null"
-            JSONType.NUMBER -> return "$numberValue"
+            JSONType.DOUBLE -> return "$doubleValue"
+            JSONType.INTEGER -> return "$intValue"
             JSONType.BOOL -> return if (booleanValue) "true" else "false"
             JSONType.STRING -> return "\"$stringValue\""
             else -> return super.toString()
@@ -77,12 +98,20 @@ open class JSONValue internal constructor(reader: JSONInputStreamReader, checkEn
         return if (type == JSONType.BOOL) booleanValue else null
     }
 
-    internal fun toNumberValue() : Double {
-        return toTypeValue { optToNumberValue() }
+    internal fun toDoubleValue() : Double {
+        return toTypeValue { optToDoubleValue() }
     }
 
-    internal fun optToNumberValue() : Double? {
-        return if (type == JSONType.NUMBER) numberValue else null
+    internal fun optToDoubleValue() : Double? {
+        return if (type == JSONType.DOUBLE || type == JSONType.INTEGER) doubleValue else null
+    }
+
+    internal fun toIntegerValue() : Int {
+        return toTypeValue { optToIntegerValue() }
+    }
+
+    internal fun optToIntegerValue(): Int? {
+        return if (type == JSONType.INTEGER) intValue else null
     }
 
     internal fun toStringValue() : String {
