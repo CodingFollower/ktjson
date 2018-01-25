@@ -53,6 +53,52 @@ class JSONArray constructor() : JSONValue() {
         } while (true)
     }
 
+    fun isNullAt(idx: Int): Boolean {
+        return get(idx).type == JSONType.NULL
+    }
+
+    fun getBoolean(idx: Int): Boolean {
+        return get(idx).toBooleanValue()
+    }
+
+    fun getInteger(idx: Int): Int {
+        return get(idx).toIntegerValue()
+    }
+
+    fun getDouble(idx: Int): Double {
+        return get(idx).toDoubleValue()
+    }
+
+    fun getString(idx: Int): String {
+        return get(idx).toStringValue()
+    }
+
+    fun getObject(idx: Int): JSONObject {
+        val v = get(idx)
+        if (v.type != JSONType.OBJECT) {
+            throw CastFailedException()
+        }
+
+        return v as JSONObject
+    }
+
+    fun getArray(idx: Int): JSONArray {
+        val v = get(idx)
+        if (v.type != JSONType.ARRAY) {
+            throw CastFailedException()
+        }
+
+        return v as JSONArray
+    }
+
+    private fun get(idx: Int): JSONValue {
+        return optGet(idx) ?: throw ArrayIndexOutOfBoundsException("$idx out of range(0, ${if (size > 0) size - 1 else 0})")
+    }
+
+    private fun optGet(idx: Int): JSONValue? {
+        return if(idx < 0 || idx >= size) null else array[idx]
+    }
+
     override fun toString(): String {
         val builder = StringBuilder()
         for (value in array) {

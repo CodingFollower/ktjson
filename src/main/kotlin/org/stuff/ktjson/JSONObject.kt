@@ -111,12 +111,8 @@ class JSONObject constructor() : JSONValue() {
         return v as JSONArray
     }
 
-    private fun<T> getValue(key: String, block: (String) -> T? ): T {
-        return block(key) ?: throw KeyNotFoundException(key)
-    }
-
     private fun get(key: String): JSONValue {
-        return getValue(key) { optGet(it) }
+        return optGet(key) ?: throw KeyNotFoundException(key)
     }
 
     private fun optGet(key: String): JSONValue? {
