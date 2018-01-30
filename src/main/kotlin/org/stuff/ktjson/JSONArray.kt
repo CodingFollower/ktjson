@@ -61,12 +61,8 @@ class JSONArray constructor() : JSONValue() {
         return get(idx).toBooleanValue()
     }
 
-    fun getInteger(idx: Int): Int {
-        return get(idx).toIntegerValue()
-    }
-
-    fun getDouble(idx: Int): Double {
-        return get(idx).toDoubleValue()
+    fun getNumber(idx: Int): Double {
+        return get(idx).toNumberValue()
     }
 
     fun getString(idx: Int): String {
@@ -99,7 +95,11 @@ class JSONArray constructor() : JSONValue() {
         return if(idx < 0 || idx >= size) null else array[idx]
     }
 
-    override fun toString(): String {
+    override fun optToJSONArray(): JSONArray? {
+        return this
+    }
+
+    override fun formatToString(): String {
         val builder = StringBuilder()
         for (value in array) {
             builder.append("$value,")
@@ -109,5 +109,9 @@ class JSONArray constructor() : JSONValue() {
             builder.deleteCharAt(builder.lastIndex)
         }
         return "[$builder]"
+    }
+
+    override fun toString(): String {
+        return formatToString()
     }
 }

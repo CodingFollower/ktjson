@@ -1,17 +1,14 @@
 package org.stuff.ktjson.test
 
 import org.junit.Test
-import org.stuff.ktjson.CastFailedException
-import org.stuff.ktjson.InvalidJSONFormatException
-import org.stuff.ktjson.JSONType
-import org.stuff.ktjson.JSONValue
+import org.stuff.ktjson.*
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 fun invalidJSONValue(invalid : Collection<String>) {
     for (str in invalid) {
         val msg = "\"$str\" should be invalid json value"
-        assertFailsWith<InvalidJSONFormatException>(msg){ JSONValue(str) }
+        assertFailsWith<InvalidJSONFormatException>(msg){ parsePrimitiveValue(str) }
     }
 }
 
@@ -21,7 +18,7 @@ fun<T> perform(list: Collection<T>, block: (T) -> Unit) {
     }
 }
 
-fun<T> perform(map: Map<String, T>, block: (String, T) -> Unit) {
+fun<TKey, T> perform(map: Map<TKey, T>, block: (TKey, T) -> Unit) {
     for ((k, v) in map) {
         block(k, v)
     }
@@ -35,16 +32,17 @@ class JSONValueTest {
 
     @Test
     fun nullTest() {
-        perform(listOf("null", "  null  ")) {
-            val v = JSONValue(it)
-            assertEquals(v.type, JSONType.NULL)
-            assertEquals(v.toString(), "null")
-            assertEquals(v.convertToString(), "null")
+        perform(listOf(JSONPrimitiveValue(),
+                parsePrimitiveValue("null"),
+                parsePrimitiveValue("  null  ")))
+        {
+            assertEquals(it.type, JSONType.NULL)
+            assertEquals(it.toString(), "null")
+            assertEquals(it.convertToString(), "null")
 
-            assertFailsWith<CastFailedException> { v.toBooleanValue() }
-            assertFailsWith<CastFailedException> { v.toDoubleValue() }
-            assertFailsWith<CastFailedException> { v.toIntegerValue() }
-            assertFailsWith<CastFailedException> { v.toStringValue() }
+            assertFailsWith<CastFailedException> { it.toBooleanValue() }
+            assertFailsWith<CastFailedException> { it.toNumberValue() }
+            assertFailsWith<CastFailedException> { it.toStringValue() }
         }
 
         invalidJSONValue(listOf("null null", "Null", "NULL"))
@@ -52,8 +50,11 @@ class JSONValueTest {
 
     @Test
     fun boolTest() {
-        perform(mapOf("true" to true, "false" to false)) { k, expect ->
-            val v = JSONValue(k)
+        perform(mapOf(parsePrimitiveValue("true") to true,
+                parsePrimitiveValue("false") to false,
+                JSONPrimitiveValue(true) to true,
+                JSONPrimitiveValue(false) to false))
+        { v, expect ->
             assertEquals(JSONType.BOOL, v.type)
             assertEquals(expect, v.toBooleanValue())
 
@@ -61,8 +62,7 @@ class JSONValueTest {
             assertEquals(str, v.toString())
             assertEquals(str, v.convertToString())
 
-            assertFailsWith<CastFailedException> { v.toDoubleValue() }
-            assertFailsWith<CastFailedException> { v.toIntegerValue() }
+            assertFailsWith<CastFailedException> { v.toNumberValue() }
             assertFailsWith<CastFailedException> { v.toStringValue() }
         }
 
@@ -70,15 +70,19 @@ class JSONValueTest {
     }
 
     @Test
-    fun integerTest() {
-        perform(mapOf("0" to 0, "-1" to -1, "-1024" to -1024, "1024" to 1024,
-                "10.0" to 10, "-10.0" to -10,
-                "10.01e2" to 1001, "0.1e2" to 10)) { k, expect ->
-            val v = JSONValue(k)
-            assertEquals(JSONType.INTEGER, v.type)
+    fun numberTest() {
+        perform(mapOf(parsePrimitiveValue("0.1") to 0.1,
+                parsePrimitiveValue("0.1") to 0.1,
+                parsePrimitiveValue("0.1e0") to 0.1,
+                parsePrimitiveValue("230.0012e2") to 23000.12,
+                parsePrimitiveValue("230.0012E+2") to 23000.12,
+                parsePrimitiveValue("230.0012E-2") to 2.300012,
+                JSONPrimitiveValue(0.1) to 0.1,
+                JSONPrimitiveValue(10.001) to 10.001))
+        { v, expect ->
+            assertEquals(JSONType.NUMBER, v.type)
 
-            assertEquals(expect, v.toIntegerValue())
-            assertEquals(expect.toDouble(), v.toDoubleValue())
+            assertEquals(expect, v.toNumberValue())
 
             assertEquals("$expect", v.toString())
             assertEquals("$expect", v.convertToString())
@@ -86,21 +90,25 @@ class JSONValueTest {
             assertFailsWith<CastFailedException> { v.toBooleanValue() }
             assertFailsWith<CastFailedException> { v.toStringValue() }
         }
-    }
 
-    @Test
-    fun doubleTest() {
-        perform(mapOf("0.1" to 0.1, "0.10" to 0.1, "0.1e0" to 0.1,
-                "230.0012E2" to 23000.12, "230.0012E+2" to 23000.12, "230.0012E-2" to 2.300012)) { k, expect ->
-            val v = JSONValue(k)
-            assertEquals(JSONType.DOUBLE, v.type)
+        perform(mapOf(parsePrimitiveValue("0") to 0,
+                parsePrimitiveValue("-1") to -1,
+                parsePrimitiveValue("-1024") to -1024,
+                parsePrimitiveValue("1024") to 1024,
+                parsePrimitiveValue("10.00") to 10,
+                parsePrimitiveValue("-10.0") to -10,
+                parsePrimitiveValue("10.01e2") to 1001,
+                parsePrimitiveValue("0.1e2") to 10,
+                parsePrimitiveValue("0.1e1") to 1,
+                JSONPrimitiveValue(10) to 10, JSONPrimitiveValue(0) to 0))
+        { v, expect ->
+            assertEquals(JSONType.NUMBER, v.type)
 
-            assertEquals(expect, v.toDoubleValue(), "str: ($k)")
+            assertEquals(expect, v.toNumberValue().toInt())
 
-            assertEquals("$expect", v.toString())
-            assertEquals("$expect", v.convertToString())
+            assertEquals("${expect.toDouble()}", v.toString())
+            assertEquals("${expect.toDouble()}", v.convertToString())
 
-            assertFailsWith<CastFailedException> { v.toIntegerValue() }
             assertFailsWith<CastFailedException> { v.toBooleanValue() }
             assertFailsWith<CastFailedException> { v.toStringValue() }
         }
@@ -123,17 +131,22 @@ class JSONValueTest {
                 """"Hello \u002AWorld"""" to StringExpect("Hello *World"),
                 """"Hello \u002aWorld"""" to StringExpect("Hello *World")))
         { k, expect ->
-            val v = JSONValue(k)
+            val v = parsePrimitiveValue(k)
             assertEquals(JSONType.STRING, v.type)
-
-            assertEquals(expect.expect, v.toStringValue(), "str: ($k)")
+            assertEquals(expect.expect, v.toStringValue())
             assertEquals(expect.expect, v.convertToString())
-
             assertEquals(expect.escaped, v.toString())
-
-            assertFailsWith<CastFailedException> { v.toIntegerValue() }
-            assertFailsWith<CastFailedException> { v.toDoubleValue() }
+            assertFailsWith<CastFailedException> { v.toNumberValue() }
             assertFailsWith<CastFailedException> { v.toBooleanValue() }
+
+            val nv = JSONPrimitiveValue(expect.expect)
+            assertEquals(JSONType.STRING, nv.type)
+            assertEquals(JSONType.STRING, nv.type)
+            assertEquals(expect.expect, nv.toStringValue())
+            assertEquals(expect.expect, nv.convertToString())
+            assertEquals(expect.escaped, nv.toString())
+            assertFailsWith<CastFailedException> { nv.toNumberValue() }
+            assertFailsWith<CastFailedException> { nv.toBooleanValue() }
         }
 
         invalidJSONValue(listOf("\"Hello \\U002AWorld\"", "\"Hello \\u2AWorld\"", "\"Hello World", "\"Hello \\World\""))

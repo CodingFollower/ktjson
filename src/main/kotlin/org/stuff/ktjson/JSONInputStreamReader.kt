@@ -40,7 +40,7 @@ internal class JSONInputStreamReader(stream : InputStream, private val charset: 
         when(ch) {
             '{' -> return JSONObject(this, true)
             '[' -> return JSONArray(this, true)
-            else -> return JSONValue(this, true)
+            else -> return JSONPrimitiveValue(this, true)
         }
     }
 

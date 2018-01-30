@@ -46,14 +46,14 @@ class JSONArrayTest {
         assertEquals(8, array.size)
         assertFalse(array.isEmpty)
         assertTrue(array.isNullAt(0))
-        assertFailsWith<CastFailedException> { array.getInteger(1) }
+        assertFailsWith<CastFailedException> { array.getNumber(1) }
         assertEquals(true, array.getBoolean(1))
         assertEquals(false, array.getBoolean(2))
-        assertEquals(11, array.getInteger(3))
-        assertEquals(0.001, array.getDouble(4))
+        assertEquals(11, array.getNumber(3).toInt())
+        assertEquals(0.001, array.getNumber(4))
         assertEquals("string", array.getString(5))
 
-        assertFailsWith<CastFailedException> { array.getInteger(6) }
+        assertFailsWith<CastFailedException> { array.getNumber(6) }
         val obj = array.getObject(6)
         assertEquals(2, obj.allKeys.size)
 
@@ -61,7 +61,7 @@ class JSONArrayTest {
         assertEquals(4, innerArray.size)
         assertTrue(innerArray.isNullAt(0))
         assertEquals(true, innerArray.getBoolean(1))
-        assertEquals(0, innerArray.getInteger(2))
+        assertEquals(0, innerArray.getNumber(2).toInt())
         assertEquals("str", innerArray.getString(3))
     }
 

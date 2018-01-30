@@ -21,7 +21,7 @@ class JSONObjectTest {
     }
 
     @Test
-    fun objectTest() {
+    fun objectParseTest() {
         val str = """
             |{
                 |"null_key": null,
@@ -48,16 +48,16 @@ class JSONObjectTest {
         assertEquals(7, obj.allKeys.size)
         assertTrue(obj.isNullForKey("null_key"))
         assertEquals(true, obj.getBoolean("bool_key"))
-        assertEquals(12, obj.getInteger("int_key"))
-        assertEquals(12.01, obj.getDouble("double_key"))
+        assertEquals(12, obj.getNumber("int_key").toInt())
+        assertEquals(12.01, obj.getNumber("double_key"))
         assertEquals("hello world", obj.getString("string_key"))
 
         val innerObj = obj.getObject("object_key")
         assertEquals(5, innerObj.allKeys.size)
         assertTrue(innerObj.isNullForKey("null_key"))
         assertEquals(false, innerObj.getBoolean("bool_key"))
-        assertEquals(0, innerObj.getInteger("int_key"))
-        assertEquals(0.1, innerObj.getDouble("double_key"))
+        assertEquals(0, innerObj.getNumber("int_key").toInt())
+        assertEquals(0.1, innerObj.getNumber("double_key"))
         assertEquals("string", innerObj.getString("string_key"))
 
         val innerArray = obj.getArray("array_key")
@@ -70,5 +70,12 @@ class JSONObjectTest {
         perform(listOf("{", "}", "{,}", "{key: }", "{\"key: }", "{\"key\": }", "{\"key\" 123 }", "\"key\": 123, }", "{\"key\": 123}  x")) {
             assertFailsWith<InvalidJSONFormatException> { JSONObject(it) }
         }
+    }
+
+    @Test
+    fun editObjectTest() {
+        val obj = JSONObject()
+        obj.putNull("key1")
+        assertTrue(obj.isNullForKey("key1"))
     }
 }

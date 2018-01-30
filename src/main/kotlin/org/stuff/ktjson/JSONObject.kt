@@ -77,16 +77,16 @@ class JSONObject constructor() : JSONValue() {
         return get(key).type == JSONType.NULL
     }
 
+    fun putNull(key: String) {
+        map[key] = JSONPrimitiveValue()
+    }
+
     fun getBoolean(key: String): Boolean {
         return get(key).toBooleanValue()
     }
 
-    fun getInteger(key: String): Int {
-        return get(key).toIntegerValue()
-    }
-
-    fun getDouble(key: String): Double {
-        return get(key).toDoubleValue()
+    fun getNumber(key: String): Double {
+        return get(key).toNumberValue()
     }
 
     fun getString(key: String): String {
@@ -119,7 +119,11 @@ class JSONObject constructor() : JSONValue() {
         return if (contains(key)) map[key] else null
     }
 
-    override fun toString(): String {
+    override fun optToJSONObject(): JSONObject? {
+        return this
+    }
+
+    override fun formatToString(): String {
         val builder = StringBuilder()
         for ((key, value) in map) {
             builder.append("\"$key\":$value,")
@@ -129,5 +133,9 @@ class JSONObject constructor() : JSONValue() {
             builder.deleteCharAt(builder.lastIndex)
         }
         return "{$builder}"
+    }
+
+    override fun toString(): String {
+        return formatToString()
     }
 }
