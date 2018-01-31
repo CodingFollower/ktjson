@@ -36,8 +36,8 @@ internal class JSONInputStreamReader(stream : InputStream, private val charset: 
             return lastReadValidChar
         }
 
-    internal constructor(text: String, charset: Charset = Charsets.UTF_8)
-            : this(ByteArrayInputStream(text.toByteArray(charset)), charset)
+    internal constructor(text: String)
+            : this(ByteArrayInputStream(text.toByteArray(Charsets.UTF_8)), Charsets.UTF_8)
 
     internal fun readJSONValue(): JSONValueBase {
         val ch = readFirstUnspaceChar()

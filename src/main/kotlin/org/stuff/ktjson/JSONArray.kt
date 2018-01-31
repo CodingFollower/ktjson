@@ -17,7 +17,7 @@ class JSONArray constructor() : JSONValueBase() {
         type = JSONType.ARRAY
     }
 
-    constructor(text: String, charset: Charset = Charsets.UTF_8) : this(JSONInputStreamReader(text, charset), false)
+    constructor(text: String) : this(JSONInputStreamReader(text), false)
 
     constructor(stream: InputStream, charset: Charset = Charsets.UTF_8) : this(JSONInputStreamReader(stream, charset), false)
 

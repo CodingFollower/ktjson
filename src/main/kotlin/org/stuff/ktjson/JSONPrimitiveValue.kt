@@ -1,11 +1,10 @@
 package org.stuff.ktjson
 
 import org.stuff.ktjson.error.InvalidJSONFormatException
-import java.nio.charset.Charset
 import java.util.regex.Pattern
 
-internal fun parsePrimitiveValue(str: String, charset: Charset = Charsets.UTF_8): JSONPrimitiveValue {
-    return JSONPrimitiveValue(JSONInputStreamReader(str, charset), false)
+internal fun parsePrimitiveValue(str: String): JSONPrimitiveValue {
+    return JSONPrimitiveValue(JSONInputStreamReader(str), false)
 }
 
 internal class JSONPrimitiveValue internal constructor() : JSONValueBase() {

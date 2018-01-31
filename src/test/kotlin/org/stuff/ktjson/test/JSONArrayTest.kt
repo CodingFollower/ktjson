@@ -5,6 +5,7 @@ import org.stuff.ktjson.error.TypeErrorException
 import org.stuff.ktjson.error.InvalidJSONFormatException
 import org.stuff.ktjson.JSONArray
 import org.stuff.ktjson.JSONObject
+import java.io.ByteArrayInputStream
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
@@ -43,27 +44,28 @@ class JSONArrayTest {
             |]
         """.trimMargin()
 
-        val array = JSONArray(str)
-        assertEquals(8, array.size)
-        assertFalse(array.isEmpty)
-        assertTrue(array[0].isNull())
-        assertFailsWith<TypeErrorException> { array[1].toNumberValue() }
-        assertEquals(true, array[1].toBooleanValue())
-        assertEquals(false, array[2].toBooleanValue())
-        assertEquals(11, array[3].toNumberValue().toInt())
-        assertEquals(0.001, array[4].toNumberValue())
-        assertEquals("string", array[5].toStringValue())
+        perform(listOf(JSONArray(str), JSONArray(ByteArrayInputStream(str.toByteArray(Charsets.UTF_32)), Charsets.UTF_32))) {
+            assertEquals(8, it.size)
+            assertFalse(it.isEmpty)
+            assertTrue(it[0].isNull())
+            assertFailsWith<TypeErrorException> { it[1].toNumberValue() }
+            assertEquals(true, it[1].toBooleanValue())
+            assertEquals(false, it[2].toBooleanValue())
+            assertEquals(11, it[3].toNumberValue().toInt())
+            assertEquals(0.001, it[4].toNumberValue())
+            assertEquals("string", it[5].toStringValue())
 
-        assertFailsWith<TypeErrorException> { array[6].toNumberValue() }
-        val obj = array[6].toJSONObject()
-        assertEquals(2, obj.allKeys.size)
+            assertFailsWith<TypeErrorException> { it[6].toNumberValue() }
+            val obj = it[6].toJSONObject()
+            assertEquals(2, obj.allKeys.size)
 
-        val innerArray = array[7].toJSONArray()
-        assertEquals(4, innerArray.size)
-        assertTrue(innerArray[0].isNull())
-        assertEquals(true, innerArray[1].toBooleanValue())
-        assertEquals(0, innerArray[2].toNumberValue().toInt())
-        assertEquals("str", innerArray[3].toStringValue())
+            val innerArray = it[7].toJSONArray()
+            assertEquals(4, innerArray.size)
+            assertTrue(innerArray[0].isNull())
+            assertEquals(true, innerArray[1].toBooleanValue())
+            assertEquals(0, innerArray[2].toNumberValue().toInt())
+            assertEquals("str", innerArray[3].toStringValue())
+        }
     }
 
     @Test
