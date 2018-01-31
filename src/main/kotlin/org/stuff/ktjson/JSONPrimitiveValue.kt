@@ -22,7 +22,7 @@ internal fun parsePrimitiveValue(str: String, charset: Charset = Charsets.UTF_8)
     return JSONPrimitiveValue(JSONInputStreamReader(str, charset), false)
 }
 
-internal class JSONPrimitiveValue internal constructor() : JSONValue() {
+internal class JSONPrimitiveValue internal constructor() : JSONValueBase() {
     private var booleanValue = false
     private var stringValue = ""
 

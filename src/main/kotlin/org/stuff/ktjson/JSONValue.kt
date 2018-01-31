@@ -1,61 +1,26 @@
 package org.stuff.ktjson
 
-abstract class JSONValue {
-    var type: JSONType = JSONType.NULL
-        protected set
+interface JSONValue {
+    val type: JSONType
 
-    private fun<T> toTypeValue(block: () -> T?) : T {
-        return block() ?: throw CastFailedException()
-    }
+    fun isNull(): Boolean
 
-    fun toBooleanValue(): Boolean {
-        return toTypeValue { optToBooleanValue() }
-    }
+    fun toBooleanValue(): Boolean
+    fun optToBooleanValue(): Boolean?
 
-    open fun optToBooleanValue(): Boolean? {
-        return null
-    }
+    fun toNumberValue(): Double
+    fun optToNumberValue(): Double?
 
-    fun toNumberValue(): Double {
-        return toTypeValue { optToNumberValue() }
-    }
+    fun toStringValue(): String
+    fun optToStringValue(): String?
 
-    open fun optToNumberValue(): Double? {
-        return null
-    }
+    fun toJSONObject(): JSONObject
+    fun optToJSONObject(): JSONObject?
 
-    fun toStringValue(): String {
-        return toTypeValue { optToStringValue() }
-    }
+    fun toJSONArray(): JSONArray
+    fun optToJSONArray(): JSONArray?
 
-    open fun optToStringValue(): String? {
-        return null
-    }
+    fun convertToString(): String
 
-    fun toJSONObject(): JSONObject {
-        return toTypeValue { optToJSONObject() }
-    }
-
-    open fun optToJSONObject(): JSONObject? {
-        return null
-    }
-
-    fun toJSONArray(): JSONArray {
-        return toTypeValue { optToJSONArray() }
-    }
-
-    open fun optToJSONArray(): JSONArray? {
-        return null
-    }
-
-    fun convertToString(): String {
-        val v = optToStringValue()
-        if (v != null) {
-            return v
-        }
-
-        return toString()
-    }
-
-    abstract fun formatToString(): String
+    fun formatToString(): String
 }

@@ -3,7 +3,7 @@ package org.stuff.ktjson
 import java.io.InputStream
 import java.nio.charset.Charset
 
-class JSONArray constructor() : JSONValue() {
+class JSONArray constructor() : JSONValueBase() {
     private val array = ArrayList<JSONValue>()
 
     val size: Int
@@ -53,45 +53,76 @@ class JSONArray constructor() : JSONValue() {
         } while (true)
     }
 
-    fun isNullAt(idx: Int): Boolean {
-        return get(idx).type == JSONType.NULL
+    fun add(v: Boolean) {
+        add(JSONPrimitiveValue(v))
     }
 
-    fun getBoolean(idx: Int): Boolean {
-        return get(idx).toBooleanValue()
+    operator fun set(idx: Int, v: Boolean) {
+        this[idx] = JSONPrimitiveValue(v)
     }
 
-    fun getNumber(idx: Int): Double {
-        return get(idx).toNumberValue()
+    fun add(v: Int) {
+        add(JSONPrimitiveValue(v))
     }
 
-    fun getString(idx: Int): String {
-        return get(idx).toStringValue()
+    operator fun set(idx: Int, v: Int) {
+        this[idx] = JSONPrimitiveValue(v)
     }
 
-    fun getObject(idx: Int): JSONObject {
-        val v = get(idx)
-        if (v.type != JSONType.OBJECT) {
-            throw CastFailedException()
+    fun add(v: Long) {
+        add(JSONPrimitiveValue(v))
+    }
+
+    operator fun set(idx: Int, v: Long) {
+        this[idx] = JSONPrimitiveValue(v)
+    }
+
+    fun add(v: Float) {
+        add(JSONPrimitiveValue(v))
+    }
+
+    operator fun set(idx: Int, v: Float) {
+        this[idx] = JSONPrimitiveValue(v)
+    }
+
+    fun add(v: Double) {
+        add(JSONPrimitiveValue(v))
+    }
+
+    operator fun set(idx: Int, v: Double) {
+        this[idx] = JSONPrimitiveValue(v)
+    }
+
+    fun add(v: String) {
+        add(JSONPrimitiveValue(v))
+    }
+
+    operator fun set(idx: Int, v: String) {
+        this[idx] = JSONPrimitiveValue(v)
+    }
+
+    private fun getValidValue(v: JSONValue?): JSONValue {
+        return v ?: JSONPrimitiveValue()
+//        return if (v == null) JSONPrimitiveValue() else v
+    }
+
+    fun add(v: JSONValue?) {
+        array.add(getValidValue(v))
+    }
+
+    operator fun set(idx: Int, v: JSONValue?) {
+        if(idx < 0 || idx >= size) {
+            throw ArrayIndexOutOfBoundsException("$idx out of range(0, ${if (size > 0) size - 1 else 0})")
         }
 
-        return v as JSONObject
+        array[idx] = getValidValue(v)
     }
 
-    fun getArray(idx: Int): JSONArray {
-        val v = get(idx)
-        if (v.type != JSONType.ARRAY) {
-            throw CastFailedException()
-        }
-
-        return v as JSONArray
-    }
-
-    private fun get(idx: Int): JSONValue {
+    operator fun get(idx: Int): JSONValue {
         return optGet(idx) ?: throw ArrayIndexOutOfBoundsException("$idx out of range(0, ${if (size > 0) size - 1 else 0})")
     }
 
-    private fun optGet(idx: Int): JSONValue? {
+    fun optGet(idx: Int): JSONValue? {
         return if(idx < 0 || idx >= size) null else array[idx]
     }
 

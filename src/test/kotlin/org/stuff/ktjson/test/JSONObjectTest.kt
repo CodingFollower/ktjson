@@ -1,9 +1,7 @@
 package org.stuff.ktjson.test
 
 import org.junit.Test
-import org.stuff.ktjson.InvalidJSONFormatException
-import org.stuff.ktjson.JSONObject
-import org.stuff.ktjson.KeyNotFoundException
+import org.stuff.ktjson.*
 import kotlin.test.*
 
 class JSONObjectTest {
@@ -12,11 +10,10 @@ class JSONObjectTest {
         perform(listOf(JSONObject("{}"), JSONObject("   {   }   "), JSONObject())) {
             assertEquals(0, it.allKeys.size)
             assertTrue(it.isEmpty)
-            assertFalse(it.contains("abc"))
+            assertFalse("abc" in it)
             assertEquals("{}", it.toString())
 
-            assertFailsWith<KeyNotFoundException> { it.isNullForKey("abc") }
-            assertFailsWith<KeyNotFoundException> { it.getBoolean("abc") }
+            assertFailsWith<KeyNotFoundException> { it["abc"] }
         }
     }
 
@@ -46,21 +43,21 @@ class JSONObjectTest {
         val obj = JSONObject(str)
         assertFalse(obj.isEmpty)
         assertEquals(7, obj.allKeys.size)
-        assertTrue(obj.isNullForKey("null_key"))
-        assertEquals(true, obj.getBoolean("bool_key"))
-        assertEquals(12, obj.getNumber("int_key").toInt())
-        assertEquals(12.01, obj.getNumber("double_key"))
-        assertEquals("hello world", obj.getString("string_key"))
+        assertTrue(obj["null_key"].isNull())
+        assertEquals(true, obj["bool_key"].toBooleanValue())
+        assertEquals(12, obj["int_key"].toNumberValue().toInt())
+        assertEquals(12.01, obj["double_key"].toNumberValue())
+        assertEquals("hello world", obj["string_key"].toStringValue())
 
-        val innerObj = obj.getObject("object_key")
+        val innerObj = obj["object_key"].toJSONObject()
         assertEquals(5, innerObj.allKeys.size)
-        assertTrue(innerObj.isNullForKey("null_key"))
-        assertEquals(false, innerObj.getBoolean("bool_key"))
-        assertEquals(0, innerObj.getNumber("int_key").toInt())
-        assertEquals(0.1, innerObj.getNumber("double_key"))
-        assertEquals("string", innerObj.getString("string_key"))
+        assertTrue(innerObj["null_key"].isNull())
+        assertEquals(false, innerObj["bool_key"].toBooleanValue())
+        assertEquals(0, innerObj["int_key"].toNumberValue().toInt())
+        assertEquals(0.1, innerObj["double_key"].toNumberValue())
+        assertEquals("string", innerObj["string_key"].toStringValue())
 
-        val innerArray = obj.getArray("array_key")
+        val innerArray = obj["array_key"].toJSONArray()
         assertFalse(innerArray.isEmpty)
         assertEquals(5, innerArray.size)
     }
@@ -75,7 +72,29 @@ class JSONObjectTest {
     @Test
     fun editObjectTest() {
         val obj = JSONObject()
-        obj.putNull("key1")
-        assertTrue(obj.isNullForKey("key1"))
+        obj["key"] = null
+        assertTrue(obj["key"].isNull())
+
+        obj["key"] = true
+        assertFalse(obj["key"].isNull())
+        assertTrue(obj["key"].toBooleanValue())
+
+        obj["key"] = 12
+        assertFailsWith<CastFailedException> { obj["key"].toBooleanValue() }
+        assertEquals(12, obj["key"].toNumberValue().toInt())
+
+        obj["key"] = "hello \tworld"
+        assertEquals("hello \tworld", obj["key"].toStringValue())
+        assertEquals("\"hello \\tworld\"", obj["key"].formatToString())
+
+        val innerObj = JSONObject()
+        obj["key"] = innerObj
+        obj["key"].toJSONObject()["key"] = 12.01
+        assertEquals(12.01, obj["key"].toJSONObject()["key"].toNumberValue())
+
+        val innerArray = JSONArray()
+        obj["key"] = innerArray
+        obj["key"].toJSONArray().add(0.001)
+        assertEquals(0.001, obj["key"].toJSONArray()[0].toNumberValue())
     }
 }

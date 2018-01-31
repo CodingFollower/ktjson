@@ -3,7 +3,7 @@ package org.stuff.ktjson
 import java.io.InputStream
 import java.nio.charset.Charset
 
-class JSONObject constructor() : JSONValue() {
+class JSONObject constructor() : JSONValueBase() {
     private val map = HashMap<String, JSONValue>()
 
     val allKeys: Set<String>
@@ -69,54 +69,49 @@ class JSONObject constructor() : JSONValue() {
         map[key] = reader.readJSONValue()
     }
 
-    fun contains(key: String): Boolean {
+    operator fun contains(key: String): Boolean {
         return key in allKeys
     }
 
-    fun isNullForKey(key: String): Boolean {
-        return get(key).type == JSONType.NULL
+    operator fun set(key: String, v: Boolean) {
+        this[key] = JSONPrimitiveValue(v)
     }
 
-    fun putNull(key: String) {
-        map[key] = JSONPrimitiveValue()
+    operator fun set(key: String, v: Int) {
+        this[key] = JSONPrimitiveValue(v)
     }
 
-    fun getBoolean(key: String): Boolean {
-        return get(key).toBooleanValue()
+    operator fun set(key: String, v: Long) {
+        this[key] = JSONPrimitiveValue(v)
     }
 
-    fun getNumber(key: String): Double {
-        return get(key).toNumberValue()
+    operator fun set(key: String, v: Float) {
+        this[key] = JSONPrimitiveValue(v)
     }
 
-    fun getString(key: String): String {
-        return get(key).toStringValue()
+    operator fun set(key: String, v: Double) {
+        this[key] = JSONPrimitiveValue(v)
     }
 
-    fun getObject(key: String): JSONObject {
-        val v = get(key)
-        if (v.type != JSONType.OBJECT) {
-            throw CastFailedException()
+    operator fun set(key: String, v: String) {
+        this[key] = JSONPrimitiveValue(v)
+    }
+
+    operator fun set(key: String, v: JSONValue?) {
+        if (v == null) {
+            map[key] = JSONPrimitiveValue()
         }
-
-        return v as JSONObject
-    }
-
-    fun getArray(key: String): JSONArray {
-        val v = get(key)
-        if (v.type != JSONType.ARRAY) {
-            throw CastFailedException()
+        else {
+            map[key] = v
         }
-
-        return v as JSONArray
     }
 
-    private fun get(key: String): JSONValue {
+    operator fun get(key: String): JSONValue {
         return optGet(key) ?: throw KeyNotFoundException(key)
     }
 
     private fun optGet(key: String): JSONValue? {
-        return if (contains(key)) map[key] else null
+        return if (key in this) map[key] else null
     }
 
     override fun optToJSONObject(): JSONObject? {
