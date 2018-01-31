@@ -79,19 +79,7 @@ class JSONObject constructor() : JSONValueBase() {
         this[key] = JSONPrimitiveValue(v)
     }
 
-    operator fun set(key: String, v: Int) {
-        this[key] = JSONPrimitiveValue(v)
-    }
-
-    operator fun set(key: String, v: Long) {
-        this[key] = JSONPrimitiveValue(v)
-    }
-
-    operator fun set(key: String, v: Float) {
-        this[key] = JSONPrimitiveValue(v)
-    }
-
-    operator fun set(key: String, v: Double) {
+    operator fun set(key: String, v: Number) {
         this[key] = JSONPrimitiveValue(v)
     }
 
@@ -100,12 +88,7 @@ class JSONObject constructor() : JSONValueBase() {
     }
 
     operator fun set(key: String, v: JSONValue?) {
-        if (v == null) {
-            map[key] = JSONPrimitiveValue()
-        }
-        else {
-            map[key] = v
-        }
+        map[key] = v ?: JSONPrimitiveValue()
     }
 
     operator fun get(key: String): JSONValue {

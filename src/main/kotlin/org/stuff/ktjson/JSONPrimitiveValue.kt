@@ -18,11 +18,8 @@ internal class JSONPrimitiveValue internal constructor() : JSONValueBase() {
         initBooleanValue(bv)
     }
 
-    internal constructor(v: Int): this(v.toDouble())
-    internal constructor(v: Long): this(v.toDouble())
-    internal constructor(v: Float): this(v.toDouble())
-    internal constructor(v: Double): this() {
-        initDoubleValue(v)
+    internal constructor(v: Number): this() {
+        initDoubleValue(v.toDouble())
     }
 
     internal constructor(v: String): this() {

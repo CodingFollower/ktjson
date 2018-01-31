@@ -62,35 +62,11 @@ class JSONArray constructor() : JSONValueBase() {
         this[idx] = JSONPrimitiveValue(v)
     }
 
-    fun add(v: Int) {
+    fun add(v: Number) {
         add(JSONPrimitiveValue(v))
     }
 
-    operator fun set(idx: Int, v: Int) {
-        this[idx] = JSONPrimitiveValue(v)
-    }
-
-    fun add(v: Long) {
-        add(JSONPrimitiveValue(v))
-    }
-
-    operator fun set(idx: Int, v: Long) {
-        this[idx] = JSONPrimitiveValue(v)
-    }
-
-    fun add(v: Float) {
-        add(JSONPrimitiveValue(v))
-    }
-
-    operator fun set(idx: Int, v: Float) {
-        this[idx] = JSONPrimitiveValue(v)
-    }
-
-    fun add(v: Double) {
-        add(JSONPrimitiveValue(v))
-    }
-
-    operator fun set(idx: Int, v: Double) {
+    operator fun set(idx: Int, v: Number) {
         this[idx] = JSONPrimitiveValue(v)
     }
 
@@ -104,7 +80,6 @@ class JSONArray constructor() : JSONValueBase() {
 
     private fun getValidValue(v: JSONValue?): JSONValue {
         return v ?: JSONPrimitiveValue()
-//        return if (v == null) JSONPrimitiveValue() else v
     }
 
     fun add(v: JSONValue?) {
