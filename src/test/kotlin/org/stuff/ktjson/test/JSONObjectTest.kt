@@ -2,6 +2,9 @@ package org.stuff.ktjson.test
 
 import org.junit.Test
 import org.stuff.ktjson.*
+import org.stuff.ktjson.error.InvalidJSONFormatException
+import org.stuff.ktjson.error.KeyNotFoundException
+import org.stuff.ktjson.error.TypeErrorException
 import kotlin.test.*
 
 class JSONObjectTest {
@@ -80,7 +83,7 @@ class JSONObjectTest {
         assertTrue(obj["key"].toBooleanValue())
 
         obj["key"] = 12
-        assertFailsWith<CastFailedException> { obj["key"].toBooleanValue() }
+        assertFailsWith<TypeErrorException> { obj["key"].toBooleanValue() }
         assertEquals(12, obj["key"].toNumberValue().toInt())
 
         obj["key"] = "hello \tworld"

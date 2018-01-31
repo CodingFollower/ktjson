@@ -1,8 +1,8 @@
 package org.stuff.ktjson.test
 
 import org.junit.Test
-import org.stuff.ktjson.CastFailedException
-import org.stuff.ktjson.InvalidJSONFormatException
+import org.stuff.ktjson.error.TypeErrorException
+import org.stuff.ktjson.error.InvalidJSONFormatException
 import org.stuff.ktjson.JSONArray
 import org.stuff.ktjson.JSONObject
 import kotlin.test.assertEquals
@@ -47,14 +47,14 @@ class JSONArrayTest {
         assertEquals(8, array.size)
         assertFalse(array.isEmpty)
         assertTrue(array[0].isNull())
-        assertFailsWith<CastFailedException> { array[1].toNumberValue() }
+        assertFailsWith<TypeErrorException> { array[1].toNumberValue() }
         assertEquals(true, array[1].toBooleanValue())
         assertEquals(false, array[2].toBooleanValue())
         assertEquals(11, array[3].toNumberValue().toInt())
         assertEquals(0.001, array[4].toNumberValue())
         assertEquals("string", array[5].toStringValue())
 
-        assertFailsWith<CastFailedException> { array[6].toNumberValue() }
+        assertFailsWith<TypeErrorException> { array[6].toNumberValue() }
         val obj = array[6].toJSONObject()
         assertEquals(2, obj.allKeys.size)
 

@@ -1,5 +1,6 @@
 package org.stuff.ktjson
 
+import org.stuff.ktjson.error.InvalidJSONFormatException
 import java.io.InputStream
 import java.nio.charset.Charset
 
@@ -21,7 +22,7 @@ class JSONArray constructor() : JSONValueBase() {
     constructor(stream: InputStream, charset: Charset = Charsets.UTF_8) : this(JSONInputStreamReader(stream, charset), false)
 
     internal constructor(reader: JSONInputStreamReader, ignoreLeft: Boolean) : this() {
-        initJSON(reader, ignoreLeft) {
+        parseJSONAndCheckLeft(reader, ignoreLeft) {
             parseArray(reader)
             reader.readNextChar()
         }
@@ -29,7 +30,7 @@ class JSONArray constructor() : JSONValueBase() {
 
     private fun parseArray(reader: JSONInputStreamReader) {
         if (reader.readFirstUnspaceChar() != '[') {
-            throw InvalidJSONFormatException("Expect '[' at front of Array")
+            throw InvalidJSONFormatException(reader.position, "Expect '[' at front of Array")
         }
 
         if (reader.readNextUnspaceChar() == ']') {
@@ -46,7 +47,7 @@ class JSONArray constructor() : JSONValueBase() {
             }
 
             if (ch != ',') {
-                throw InvalidJSONFormatException("Expert ',' between values")
+                throw InvalidJSONFormatException(reader.position, "Expert ',' between values in array")
             }
 
             reader.readNextUnspaceChar()

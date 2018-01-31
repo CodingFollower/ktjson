@@ -1,22 +1,8 @@
 package org.stuff.ktjson
 
+import org.stuff.ktjson.error.InvalidJSONFormatException
 import java.nio.charset.Charset
 import java.util.regex.Pattern
-
-internal fun initJSON(reader: JSONInputStreamReader, ignoreLeft: Boolean, block: (JSONInputStreamReader) -> Unit) {
-    try {
-        block(reader)
-        if (!ignoreLeft && reader.isLeftContainsUnspace()) {
-            throw InvalidJSONFormatException()
-        }
-    }
-    catch (e: InvalidJSONFormatException) {
-        throw e
-    }
-    catch (e: Exception) {
-        throw InvalidJSONFormatException(e.toString())
-    }
-}
 
 internal fun parsePrimitiveValue(str: String, charset: Charset = Charsets.UTF_8): JSONPrimitiveValue {
     return JSONPrimitiveValue(JSONInputStreamReader(str, charset), false)
@@ -44,7 +30,7 @@ internal class JSONPrimitiveValue internal constructor() : JSONValueBase() {
     }
 
     internal constructor(reader: JSONInputStreamReader, ignoreLeft: Boolean) : this() {
-        initJSON(reader, ignoreLeft) { parseValue(it) }
+        parseJSONAndCheckLeft(reader, ignoreLeft) { parseValue(it) }
     }
 
     private  fun parseValue(reader: JSONInputStreamReader) {
@@ -58,7 +44,7 @@ internal class JSONPrimitiveValue internal constructor() : JSONValueBase() {
                 "null" -> type = JSONType.NULL
                 "true" -> initBooleanValue(true)
                 "false" -> initBooleanValue(false)
-                else -> initNumberValue(v)
+                else -> initNumberValue(reader.position, v)
             }
         }
     }
@@ -73,18 +59,13 @@ internal class JSONPrimitiveValue internal constructor() : JSONValueBase() {
         type = JSONType.BOOL
     }
 
-    private fun initNumberValue(str: String) {
-        try {
-            val  regex = """^-?(0|([1-9]\d*))(.\d+)?([e|E][+|-]?\d+)?$"""
-            if (!Pattern.matches(regex, str)) {
-                throw InvalidJSONFormatException()
-            }
+    private fun initNumberValue(pos: Long, str: String) {
+        val  regex = """^-?(0|([1-9]\d*))(.\d+)?([e|E][+|-]?\d+)?$"""
+        if (!Pattern.matches(regex, str)) {
+            throw InvalidJSONFormatException(pos, "\"\$str\" not match regex \"$regex\"")
+        }
 
-            initDoubleValue(java.lang.Double.valueOf(str))
-        }
-        catch (e: Exception) {
-            throw InvalidJSONFormatException(e.toString())
-        }
+        initDoubleValue(java.lang.Double.valueOf(str))
     }
 
     private fun initDoubleValue(v: Double) {

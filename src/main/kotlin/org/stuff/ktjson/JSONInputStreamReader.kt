@@ -1,6 +1,7 @@
 package org.stuff.ktjson
 
 import com.sun.javaws.exceptions.InvalidArgumentException
+import org.stuff.ktjson.error.InvalidJSONFormatException
 import java.io.*
 import java.nio.charset.Charset
 
@@ -21,6 +22,9 @@ private fun isSpace(ch: Char) : Boolean {
 
 internal class JSONInputStreamReader(stream : InputStream, private val charset: Charset = Charsets.UTF_8) {
     private val reader = InputStreamReader(stream, charset)
+    var position: Long = -1
+        private set
+
     private var lastReadValidChar: Char = (0).toChar()
 
     private val currentChar: Char
@@ -67,7 +71,7 @@ internal class JSONInputStreamReader(stream : InputStream, private val charset: 
 
     fun readString(): String {
         if (readFirstUnspaceChar() != '\"') {
-            throw InvalidJSONFormatException("Expect '\"' at front of string")
+            throw InvalidJSONFormatException(position, "Expect '\"' at front of string")
         }
 
         val builder = StringBuilder()
@@ -80,7 +84,7 @@ internal class JSONInputStreamReader(stream : InputStream, private val charset: 
                     builder.append(str)
                 }
                 else if (!jsonControlMap.containsKey(ctl)) {
-                    throw InvalidJSONFormatException("$ctl is not valid control char")
+                    throw InvalidJSONFormatException(position, "${ctl.toInt()} is not valid control char")
                 }
                 else {
                     builder.append(jsonControlMap[ctl])
@@ -99,15 +103,21 @@ internal class JSONInputStreamReader(stream : InputStream, private val charset: 
     }
 
     private fun unicodeToString(): String {
-        val buf = CharArray(4)
-        readNextValidChars(buf)
+        val currentPos = position
+        try {
+            val buf = CharArray(4)
+            readNextValidChars(buf)
 
-        val str = String(buf)
-        val code = Integer.valueOf(str, 16)
+            val str = String(buf)
+            val code = Integer.parseInt(str, 16)
 
-        val builder = StringBuilder()
-        builder.appendCodePoint(code)
-        return builder.toString()
+            val builder = StringBuilder()
+            builder.appendCodePoint(code)
+            return builder.toString()
+        }
+        catch (e: NumberFormatException) {
+            throw InvalidJSONFormatException(currentPos, e.toString())
+        }
     }
 
     private fun readNextValidChars(buf: CharArray, start: Int = 0) {
@@ -122,8 +132,9 @@ internal class JSONInputStreamReader(stream : InputStream, private val charset: 
 
     private fun readNextValidChar(): Char {
         val ch = readNextChar()
+        ++position
         if (ch == -1) {
-            throw InvalidJSONFormatException("Unexpect End")
+            throw InvalidJSONFormatException(position, "Unexpect End")
         }
 
         return lastReadValidChar

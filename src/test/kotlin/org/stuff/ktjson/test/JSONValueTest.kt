@@ -2,6 +2,8 @@ package org.stuff.ktjson.test
 
 import org.junit.Test
 import org.stuff.ktjson.*
+import org.stuff.ktjson.error.InvalidJSONFormatException
+import org.stuff.ktjson.error.TypeErrorException
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
@@ -40,9 +42,9 @@ class JSONValueTest {
             assertEquals(it.toString(), "null")
             assertEquals(it.convertToString(), "null")
 
-            assertFailsWith<CastFailedException> { it.toBooleanValue() }
-            assertFailsWith<CastFailedException> { it.toNumberValue() }
-            assertFailsWith<CastFailedException> { it.toStringValue() }
+            assertFailsWith<TypeErrorException> { it.toBooleanValue() }
+            assertFailsWith<TypeErrorException> { it.toNumberValue() }
+            assertFailsWith<TypeErrorException> { it.toStringValue() }
         }
 
         invalidJSONValue(listOf("null null", "Null", "NULL"))
@@ -62,8 +64,8 @@ class JSONValueTest {
             assertEquals(str, v.toString())
             assertEquals(str, v.convertToString())
 
-            assertFailsWith<CastFailedException> { v.toNumberValue() }
-            assertFailsWith<CastFailedException> { v.toStringValue() }
+            assertFailsWith<TypeErrorException> { v.toNumberValue() }
+            assertFailsWith<TypeErrorException> { v.toStringValue() }
         }
 
         invalidJSONValue(listOf("TRUE", "FALSE"))
@@ -87,8 +89,8 @@ class JSONValueTest {
             assertEquals("$expect", v.toString())
             assertEquals("$expect", v.convertToString())
 
-            assertFailsWith<CastFailedException> { v.toBooleanValue() }
-            assertFailsWith<CastFailedException> { v.toStringValue() }
+            assertFailsWith<TypeErrorException> { v.toBooleanValue() }
+            assertFailsWith<TypeErrorException> { v.toStringValue() }
         }
 
         perform(mapOf(parsePrimitiveValue("0") to 0,
@@ -109,8 +111,8 @@ class JSONValueTest {
             assertEquals("${expect.toDouble()}", v.toString())
             assertEquals("${expect.toDouble()}", v.convertToString())
 
-            assertFailsWith<CastFailedException> { v.toBooleanValue() }
-            assertFailsWith<CastFailedException> { v.toStringValue() }
+            assertFailsWith<TypeErrorException> { v.toBooleanValue() }
+            assertFailsWith<TypeErrorException> { v.toStringValue() }
         }
 
     }
@@ -136,8 +138,8 @@ class JSONValueTest {
             assertEquals(expect.expect, v.toStringValue())
             assertEquals(expect.expect, v.convertToString())
             assertEquals(expect.escaped, v.toString())
-            assertFailsWith<CastFailedException> { v.toNumberValue() }
-            assertFailsWith<CastFailedException> { v.toBooleanValue() }
+            assertFailsWith<TypeErrorException> { v.toNumberValue() }
+            assertFailsWith<TypeErrorException> { v.toBooleanValue() }
 
             val nv = JSONPrimitiveValue(expect.expect)
             assertEquals(JSONType.STRING, nv.type)
@@ -145,8 +147,8 @@ class JSONValueTest {
             assertEquals(expect.expect, nv.toStringValue())
             assertEquals(expect.expect, nv.convertToString())
             assertEquals(expect.escaped, nv.toString())
-            assertFailsWith<CastFailedException> { nv.toNumberValue() }
-            assertFailsWith<CastFailedException> { nv.toBooleanValue() }
+            assertFailsWith<TypeErrorException> { nv.toNumberValue() }
+            assertFailsWith<TypeErrorException> { nv.toBooleanValue() }
         }
 
         invalidJSONValue(listOf("\"Hello \\U002AWorld\"", "\"Hello \\u2AWorld\"", "\"Hello World", "\"Hello \\World\""))

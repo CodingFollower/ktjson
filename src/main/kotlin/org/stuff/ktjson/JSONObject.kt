@@ -1,5 +1,7 @@
 package org.stuff.ktjson
 
+import org.stuff.ktjson.error.InvalidJSONFormatException
+import org.stuff.ktjson.error.KeyNotFoundException
 import java.io.InputStream
 import java.nio.charset.Charset
 
@@ -21,7 +23,7 @@ class JSONObject constructor() : JSONValueBase() {
     constructor(stream: InputStream, charset: Charset = Charsets.UTF_8) : this(JSONInputStreamReader(stream, charset), false)
 
     internal constructor(reader: JSONInputStreamReader, ignoreLeft: Boolean): this() {
-        initJSON(reader, ignoreLeft) {
+        parseJSONAndCheckLeft(reader, ignoreLeft) {
             parseObject(reader)
             reader.readNextChar()
         }
@@ -29,7 +31,7 @@ class JSONObject constructor() : JSONValueBase() {
 
     private fun parseObject(reader: JSONInputStreamReader) {
         if (reader.readFirstUnspaceChar() != '{') {
-            throw InvalidJSONFormatException("Expect '{' at front of Object")
+            throw InvalidJSONFormatException(reader.position, "Expect '{' at front of Object")
         }
 
         if (reader.readNextUnspaceChar() == '}') {
@@ -44,7 +46,7 @@ class JSONObject constructor() : JSONValueBase() {
             }
 
             if (ch != ',') {
-                throw InvalidJSONFormatException("Expert ',' between key value pairs")
+                throw InvalidJSONFormatException(reader.position, "Expert ',' between key value pairs in object")
             }
 
             reader.readNextUnspaceChar()
@@ -53,16 +55,16 @@ class JSONObject constructor() : JSONValueBase() {
 
     private fun parseKeyValuePair(reader: JSONInputStreamReader) {
         if (reader.readFirstUnspaceChar() != '\"') {
-            throw InvalidJSONFormatException("Expect '\"' at front of object key")
+            throw InvalidJSONFormatException(reader.position, "Expect '\"' at front of object key")
         }
 
         val key = reader.readString()
         if (key.isEmpty()) {
-            throw InvalidJSONFormatException("Object key is empty")
+            throw InvalidJSONFormatException(reader.position, "Object key is empty")
         }
 
         if (reader.readFirstUnspaceChar() != ':') {
-            throw InvalidJSONFormatException("Expect ':' between object key and value")
+            throw InvalidJSONFormatException(reader.position, "Expect ':' between object key and value")
         }
         reader.readNextUnspaceChar()
 

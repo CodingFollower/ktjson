@@ -1,5 +1,15 @@
 package org.stuff.ktjson
 
+import org.stuff.ktjson.error.InvalidJSONFormatException
+import org.stuff.ktjson.error.TypeErrorException
+
+internal fun parseJSONAndCheckLeft(reader: JSONInputStreamReader, ignoreLeft: Boolean, block: (JSONInputStreamReader) -> Unit) {
+    block(reader)
+    if (!ignoreLeft && reader.isLeftContainsUnspace()) {
+        throw InvalidJSONFormatException(reader.position, "Stream contains unnecessary chars after json text")
+    }
+}
+
 abstract class JSONValueBase : JSONValue {
     override var type: JSONType = JSONType.NULL
         protected set
@@ -8,12 +18,12 @@ abstract class JSONValueBase : JSONValue {
         return type == JSONType.NULL
     }
 
-    private fun<T> toTypeValue(block: () -> T?) : T {
-        return block() ?: throw CastFailedException()
+    private fun<T> toTypeValue(expect: JSONType, block: () -> T?) : T {
+        return block() ?: throw TypeErrorException(expect, type)
     }
 
     override fun toBooleanValue(): Boolean {
-        return toTypeValue { optToBooleanValue() }
+        return toTypeValue(JSONType.BOOL) { optToBooleanValue() }
     }
 
     override fun optToBooleanValue(): Boolean? {
@@ -21,7 +31,7 @@ abstract class JSONValueBase : JSONValue {
     }
 
     override fun toNumberValue(): Double {
-        return toTypeValue { optToNumberValue() }
+        return toTypeValue(JSONType.NUMBER) { optToNumberValue() }
     }
 
     override fun optToNumberValue(): Double? {
@@ -29,7 +39,7 @@ abstract class JSONValueBase : JSONValue {
     }
 
     override fun toStringValue(): String {
-        return toTypeValue { optToStringValue() }
+        return toTypeValue(JSONType.STRING) { optToStringValue() }
     }
 
     override fun optToStringValue(): String? {
@@ -37,7 +47,7 @@ abstract class JSONValueBase : JSONValue {
     }
 
     override fun toJSONObject(): JSONObject {
-        return toTypeValue { optToJSONObject() }
+        return toTypeValue(JSONType.OBJECT) { optToJSONObject() }
     }
 
     override fun optToJSONObject(): JSONObject? {
@@ -45,7 +55,7 @@ abstract class JSONValueBase : JSONValue {
     }
 
     override fun toJSONArray(): JSONArray {
-        return toTypeValue { optToJSONArray() }
+        return toTypeValue(JSONType.ARRAY) { optToJSONArray() }
     }
 
     override fun optToJSONArray(): JSONArray? {
@@ -53,11 +63,6 @@ abstract class JSONValueBase : JSONValue {
     }
 
     override fun convertToString(): String {
-        val v = optToStringValue()
-        if (v != null) {
-            return v
-        }
-
-        return toString()
+        return optToStringValue() ?: formatToString()
     }
 }
