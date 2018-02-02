@@ -1,7 +1,7 @@
 package org.stuff.ktjson.test
 
 import org.junit.Test
-import org.stuff.ktjson.JSONPrimitiveValue
+import org.stuff.ktjson.JSONObject
 import org.stuff.ktjson.serialization.JSONSerializeKeyName
 import org.stuff.ktjson.serialization.deserialize
 import org.stuff.ktjson.serialization.serialize
@@ -20,14 +20,18 @@ class JSONSerializationTest {
         assertEquals("hello", serialize("hello").toStringValue())
     }
 
+//    @Test
+//    fun primitiveDeserializeTest() {
+//        assertEquals(null, deserialize(JSONPrimitiveValue()))
+//        assertEquals(true, deserialize(JSONPrimitiveValue(true)))
+//        assertEquals(false, deserialize(JSONPrimitiveValue(false)))
+//        assertEquals(12.toDouble(), deserialize(JSONPrimitiveValue(12)))
+//        assertEquals(0.01, deserialize(JSONPrimitiveValue(0.01)))
+//        assertEquals("word", deserialize(JSONPrimitiveValue("word")))
+//    }
     @Test
-    fun primitiveDeserializeTest() {
-        assertEquals(null, deserialize(JSONPrimitiveValue()))
-        assertEquals(true, deserialize(JSONPrimitiveValue(true)))
-        assertEquals(false, deserialize(JSONPrimitiveValue(false)))
-        assertEquals(12.toDouble(), deserialize(JSONPrimitiveValue(12)))
-        assertEquals(0.01, deserialize(JSONPrimitiveValue(0.01)))
-        assertEquals("word", deserialize(JSONPrimitiveValue("word")))
+    fun deserializeTest() {
+        val obj = deserialize<Employee>(Employee::class, JSONObject())
     }
 
     private class PrivateObject

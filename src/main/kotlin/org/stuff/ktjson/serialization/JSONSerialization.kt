@@ -2,6 +2,7 @@ package org.stuff.ktjson.serialization
 
 import org.stuff.ktjson.*
 import java.lang.reflect.Modifier
+import kotlin.reflect.KClass
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.javaField
@@ -78,16 +79,20 @@ private fun serializeArray(array: kotlin.Array<*>): JSONArray {
     return json
 }
 
-fun deserialize(v: JSONValue): Any? {
-    return deserializePrimitive(v)
+fun<T : Any> deserialize(cls: KClass<T>, v: JSONValue): T {
+    val constructor = cls.constructors.find { it.parameters.isEmpty() }
+            ?: throw JSONDeserializeFailedException("$cls must has a constructor without parameters")
+    val instance = constructor.call()
+
+    return instance
 }
 
-private fun deserializePrimitive(v: JSONValue): Any? {
+private fun deserializePrimitive(v: JSONPrimitiveValue): Any? {
     return when(v.type) {
         JSONType.NULL -> null
         JSONType.BOOL -> v.toBooleanValue()
         JSONType.NUMBER -> v.toNumberValue()
         JSONType.STRING -> v.toStringValue()
-        else -> throw Exception()
+        else -> throw JSONDeserializeFailedException("")
     }
 }
