@@ -2,6 +2,7 @@ package org.stuff.ktjson.serialization
 
 import org.stuff.ktjson.*
 import java.lang.reflect.Modifier
+import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.javaField
 import kotlin.reflect.jvm.javaGetter
@@ -31,7 +32,12 @@ private fun serializeObject(instance: Any): JSONObject {
         }
         val pv = getter.invoke(instance)
 
-        obj[p.name] = serialize(pv)
+        var name = p.name
+        val a = p.findAnnotation<JSONSerializeKeyName>()
+        if (a != null && !a.name.isEmpty()) {
+            name = a.name
+        }
+        obj[name] = serialize(pv)
     }
 
     return obj

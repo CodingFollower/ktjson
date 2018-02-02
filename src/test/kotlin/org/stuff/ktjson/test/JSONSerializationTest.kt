@@ -2,6 +2,7 @@ package org.stuff.ktjson.test
 
 import org.junit.Test
 import org.stuff.ktjson.JSONPrimitiveValue
+import org.stuff.ktjson.serialization.JSONSerializeKeyName
 import org.stuff.ktjson.serialization.deserialize
 import org.stuff.ktjson.serialization.serialize
 import kotlin.test.assertEquals
@@ -43,6 +44,9 @@ class JSONSerializationTest {
         val doubleProperty: Double = 0.01
         val nullProperty = null
 
+        @JSONSerializeKeyName("new_name")
+        val renameProperty = "rename"
+
         val listProperty = listOf<Any>(TestObjectBase(), "text", 100.01)
         val arrayProperty = arrayOf(TestObjectBase(), null)
 
@@ -67,6 +71,7 @@ class JSONSerializationTest {
         assertTrue("privateProperty" !in obj)
         assertTrue("notFieldProperty" !in obj)
         assertTrue("extProperty" !in obj)
+        assertTrue("renameProperty" !in obj)
 
         assertTrue(obj["nullProperty"].isNull())
         assertFalse(obj["boolProperty"].toBooleanValue())
@@ -74,6 +79,7 @@ class JSONSerializationTest {
         assertEquals(10, obj["intProperty"].toNumberValue().toInt())
         assertEquals(0.01, obj["doubleProperty"].toNumberValue())
         assertEquals("internal", obj["internalProperty"].toStringValue())
+        assertEquals("rename", obj["new_name"].toStringValue())
 
         val listArray = obj["listProperty"].toJSONArray()
         assertEquals(3, listArray.size)
