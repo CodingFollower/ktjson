@@ -113,4 +113,14 @@ internal class JSONPrimitiveValue internal constructor() : JSONValueBase() {
 
         return builder.toString()
     }
+
+    override fun cloneValue(): JSONValue {
+        return when(type) {
+            JSONType.NULL -> JSONPrimitiveValue()
+            JSONType.BOOL -> JSONPrimitiveValue(booleanValue)
+            JSONType.NUMBER -> JSONPrimitiveValue(numberValue)
+            JSONType.STRING -> JSONPrimitiveValue(stringValue)
+            else -> throw Exception("")
+        }
+    }
 }

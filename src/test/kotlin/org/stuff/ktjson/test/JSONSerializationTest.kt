@@ -2,14 +2,25 @@ package org.stuff.ktjson.test
 
 import org.junit.Test
 import org.stuff.ktjson.JSONObject
-import org.stuff.ktjson.serialization.JSONSerializeKeyName
+import org.stuff.ktjson.serialization.JSONSerializeFailedException
 import org.stuff.ktjson.serialization.deserialize
 import org.stuff.ktjson.serialization.serialize
+import kotlin.reflect.full.memberExtensionFunctions
+import kotlin.reflect.full.memberExtensionProperties
+import kotlin.reflect.full.memberProperties
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
+private class PrivateClass
+
 class JSONSerializationTest {
+    @Test
+    fun invalidSerialize() {
+        assertFailsWith<JSONSerializeFailedException> { serialize(PrivateClass()) }
+    }
+
     @Test
     fun primitiveSerializeTest() {
         assertTrue(serialize(null).isNull())
@@ -20,85 +31,44 @@ class JSONSerializationTest {
         assertEquals("hello", serialize("hello").toStringValue())
     }
 
-//    @Test
-//    fun primitiveDeserializeTest() {
-//        assertEquals(null, deserialize(JSONPrimitiveValue()))
-//        assertEquals(true, deserialize(JSONPrimitiveValue(true)))
-//        assertEquals(false, deserialize(JSONPrimitiveValue(false)))
-//        assertEquals(12.toDouble(), deserialize(JSONPrimitiveValue(12)))
-//        assertEquals(0.01, deserialize(JSONPrimitiveValue(0.01)))
-//        assertEquals("word", deserialize(JSONPrimitiveValue("word")))
-//    }
-    @Test
-    fun deserializeTest() {
-        val obj = deserialize<Employee>(Employee::class, JSONObject())
-    }
-
-    private class PrivateObject
-
-    open class TestObjectBase {
-        val boolProperty = false
-        val strProperty: String = "str"
-        val intProperty: Int = 10
-
-        protected val protectedProperty = "protected"
-    }
-
-    class TestObject : TestObjectBase() {
-        val doubleProperty: Double = 0.01
-        val nullProperty = null
-
-        @JSONSerializeKeyName("new_name")
-        val renameProperty = "rename"
-
-        val listProperty = listOf<Any>(TestObjectBase(), "text", 100.01)
-        val arrayProperty = arrayOf(TestObjectBase(), null)
-
-        val objetProperty = TestObjectBase()
-
-        private val privateProperty = "private"
-        internal val internalProperty = "internal"
-
-        val notFieldProperty
-            get() = protectedProperty
-    }
-
-    val TestObject.extProperty: String
-        get() = strProperty
-
     @Test
     fun objectSerializeTest() {
-        assertTrue(serialize(PrivateObject()).toJSONObject().isEmpty)
+        assertTrue(serialize(EmptyObject()).toJSONObject().isEmpty)
 
-        val obj = serialize(TestObject()).toJSONObject()
+        val instance = TestObject()
+        val obj = serialize(instance).toJSONObject()
         assertTrue("protectedProperty" !in obj)
         assertTrue("privateProperty" !in obj)
-        assertTrue("notFieldProperty" !in obj)
-        assertTrue("extProperty" !in obj)
         assertTrue("renameProperty" !in obj)
+        assertTrue("ignoreProperty1" !in obj)
+        assertTrue("ignoreProperty2" !in obj)
+        assertTrue("extProperty" !in obj)
+        assertTrue("notFieldProperty" !in obj)
 
         assertTrue(obj["nullProperty"].isNull())
-        assertFalse(obj["boolProperty"].toBooleanValue())
-        assertEquals("str", obj["strProperty"].toStringValue())
-        assertEquals(10, obj["intProperty"].toNumberValue().toInt())
-        assertEquals(0.01, obj["doubleProperty"].toNumberValue())
-        assertEquals("internal", obj["internalProperty"].toStringValue())
-        assertEquals("rename", obj["new_name"].toStringValue())
+        assertEquals(instance.boolProperty, obj["boolProperty"].toBooleanValue())
+        assertEquals(instance.strProperty, obj["strProperty"].toStringValue())
+        assertEquals(instance.intProperty, obj["intProperty"].toNumberValue().toInt())
+        assertEquals(instance.doubleProperty, obj["doubleProperty"].toNumberValue())
+        assertEquals(instance.internalProperty, obj["internalProperty"].toStringValue())
+        assertEquals(instance.renameProperty, obj["new_name"].toStringValue())
+//        assertEquals(instance.notFieldProperty, obj["notFieldProperty"].toStringValue())
 
         val listArray = obj["listProperty"].toJSONArray()
-        assertEquals(3, listArray.size)
-        assertEquals("str", listArray[0].toJSONObject()["strProperty"].toStringValue())
-        assertEquals("text", listArray[1].toStringValue())
-        assertEquals(100.01, listArray[2].toNumberValue())
+        assertEquals(instance.listProperty.size, listArray.size)
+        assertEquals((instance.listProperty[0] as TestObjectBase).strProperty, listArray[0].toJSONObject()["strProperty"].toStringValue())
+        assertEquals(instance.listProperty[1], listArray[1].toStringValue())
+        assertEquals(instance.listProperty[2], listArray[2].toNumberValue())
 
         val arrayJSON = obj["arrayProperty"].toJSONArray()
-        assertEquals(2, arrayJSON.size)
-        assertEquals(10, arrayJSON[0].toJSONObject()["intProperty"].toNumberValue().toInt())
+        assertEquals(instance.arrayProperty.size, arrayJSON.size)
+        assertEquals((instance.arrayProperty[0]!! as TestObjectBase).intProperty, arrayJSON[0].toJSONObject()["intProperty"].toNumberValue().toInt())
         assertTrue(arrayJSON[1].isNull())
+        assertEquals(instance.arrayProperty[2], arrayJSON[2].toStringValue())
 
-        val innerObj = obj["objetProperty"].toJSONObject()
-        assertEquals("str", innerObj["strProperty"].toStringValue())
-        assertEquals(10, innerObj["intProperty"].toNumberValue().toInt())
-        assertFalse(innerObj["boolProperty"].toBooleanValue())
+        val innerObj = obj["objectProperty"].toJSONObject()
+        assertEquals(instance.objectProperty.strProperty, innerObj["strProperty"].toStringValue())
+        assertEquals(instance.objectProperty.intProperty, innerObj["intProperty"].toNumberValue().toInt())
+        assertEquals(instance.objectProperty.boolProperty, innerObj["boolProperty"].toBooleanValue())
     }
 }

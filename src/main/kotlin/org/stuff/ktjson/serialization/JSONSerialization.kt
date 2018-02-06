@@ -1,12 +1,64 @@
 package org.stuff.ktjson.serialization
 
 import org.stuff.ktjson.*
+import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import kotlin.reflect.KClass
-import kotlin.reflect.full.findAnnotation
-import kotlin.reflect.full.memberProperties
+import kotlin.reflect.KMutableProperty
+import kotlin.reflect.KProperty
+import kotlin.reflect.full.*
+import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
 import kotlin.reflect.jvm.javaField
 import kotlin.reflect.jvm.javaGetter
+import kotlin.reflect.jvm.javaSetter
+
+internal fun walkClassSerializableProperty(cls: KClass<*>, instance: Any, block: (Any, KProperty<*>) -> Unit) {
+    val properties = cls.declaredMemberProperties
+    properties.map {
+        if (it.findAnnotation<JSONSerializeIgnore>() != null) {
+            return@map
+        }
+
+        if (it.javaField == null) {
+            return@map
+        }
+
+        val getter = it.javaGetter?: return@map
+        if (!checkMethodVisibility(getter)) {
+            return@map
+        }
+
+        if (it !is KMutableProperty<*>) {
+            return@map
+        }
+        val setter = it.javaSetter ?: return@map
+        if (!checkMethodVisibility(setter)) {
+            return@map
+        }
+
+        block(instance, it)
+    }
+}
+
+internal fun getPropertyName(p: KProperty<*>): String {
+    var name = p.name
+    val a = p.findAnnotation<JSONSerializeKeyName>()
+    if (a != null && !a.name.isEmpty()) {
+        name = a.name
+    }
+
+    return name
+}
+
+internal fun checkMethodVisibility(call: Method): Boolean {
+    val m = call.modifiers
+    return Modifier.isPublic(m) && !Modifier.isStatic(m)
+}
+
+internal fun checkClassVisibility(cls: Class<*>): Boolean {
+    val m = cls.modifiers
+    return Modifier.isPublic(m) && !Modifier.isStatic(m)
+}
 
 fun serialize(v: Any?): JSONValue {
     return when {
@@ -17,30 +69,40 @@ fun serialize(v: Any?): JSONValue {
     }
 }
 
+private fun serializeOnClass(cls: KClass<*>, instance: Any, obj: JSONObject) {
+    walkClassSerializableProperty(cls, instance) {
+        inst, p ->
+        val name = getPropertyName(p)
+        val getter = p.javaGetter?: throw JSONSerializeFailedException("getter of $name not exists")
+        val pv = getter.invoke(inst)
+        obj[name] = serialize(pv)
+    }
+}
+
+private fun serializeClass(cls: KClass<*>, instance: Any, obj: JSONObject) {
+    if (cls == Any::class || cls == JvmType.Object::class) {
+        return
+    }
+
+    if (cls.findAnnotation<JSONSerializeIgnore>() != null) {
+        return
+    }
+
+    cls.superclasses.map {
+        serializeClass(it, instance, obj)
+    }
+    serializeOnClass(cls, instance, obj)
+}
+
 private fun serializeObject(instance: Any): JSONObject {
     val obj = JSONObject()
     val cls = instance::class
-    val properties = cls.memberProperties
-    for (p in properties) {
-        if (p.javaField == null) {
-            continue
-        }
 
-        val getter = p.javaGetter ?: continue
-        val m = getter.modifiers
-        if (!Modifier.isPublic(m) || Modifier.isStatic(m)) {
-            continue
-        }
-        val pv = getter.invoke(instance)
-
-        var name = p.name
-        val a = p.findAnnotation<JSONSerializeKeyName>()
-        if (a != null && !a.name.isEmpty()) {
-            name = a.name
-        }
-        obj[name] = serialize(pv)
+    if (!checkClassVisibility(cls.java)) {
+        throw JSONSerializeFailedException("$cls not access")
     }
 
+    serializeClass(cls, instance, obj)
     return obj
 }
 
@@ -77,22 +139,4 @@ private fun serializeArray(array: kotlin.Array<*>): JSONArray {
     }
 
     return json
-}
-
-fun<T : Any> deserialize(cls: KClass<T>, v: JSONValue): T {
-    val constructor = cls.constructors.find { it.parameters.isEmpty() }
-            ?: throw JSONDeserializeFailedException("$cls must has a constructor without parameters")
-    val instance = constructor.call()
-
-    return instance
-}
-
-private fun deserializePrimitive(v: JSONPrimitiveValue): Any? {
-    return when(v.type) {
-        JSONType.NULL -> null
-        JSONType.BOOL -> v.toBooleanValue()
-        JSONType.NUMBER -> v.toNumberValue()
-        JSONType.STRING -> v.toStringValue()
-        else -> throw JSONDeserializeFailedException("")
-    }
 }

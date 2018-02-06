@@ -22,6 +22,25 @@ class JSONObjectTest {
     }
 
     @Test
+    fun deleteKeyTest() {
+        val str = """
+            |{
+            |   "key": "value",
+            |   "key1": "value"
+            |}
+            |""".trimMargin()
+        val obj = JSONObject(str)
+        assertEquals(2, obj.allKeys.size)
+        assertEquals(null, obj.delete("not_exists"))
+
+        val v = obj.delete("key")
+        assertNotEquals(null, v)
+        assertEquals("value", v!!.toStringValue())
+        assertEquals(1, obj.allKeys.size)
+        assertEquals("value", obj["key1"].toStringValue())
+    }
+
+    @Test
     fun objectParseTest() {
         val str = """
             |{

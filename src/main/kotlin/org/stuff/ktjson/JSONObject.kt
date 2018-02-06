@@ -75,6 +75,14 @@ class JSONObject constructor() : JSONValueBase() {
         return key in allKeys
     }
 
+    fun delete(key: String): JSONValue? {
+        if (key !in this) {
+            return null
+        }
+
+        return map.remove(key)
+    }
+
     operator fun set(key: String, v: Boolean) {
         this[key] = JSONPrimitiveValue(v)
     }
@@ -117,5 +125,14 @@ class JSONObject constructor() : JSONValueBase() {
 
     override fun toString(): String {
         return formatToString()
+    }
+
+    override fun cloneValue(): JSONValue {
+        val obj = JSONObject()
+        for (key in allKeys) {
+            obj[key] = this[key].cloneValue()
+        }
+
+        return obj
     }
 }

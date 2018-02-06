@@ -121,4 +121,12 @@ class JSONArray constructor() : JSONValueBase() {
     override fun toString(): String {
         return formatToString()
     }
+
+    override fun cloneValue(): JSONValue {
+        val json = JSONArray()
+        for (v in array) {
+            json.add(v.cloneValue())
+        }
+        return json
+    }
 }

@@ -23,4 +23,6 @@ interface JSONValue {
     fun convertToString(): String
 
     fun formatToString(): String
+
+    fun cloneValue(): JSONValue
 }
