@@ -96,6 +96,9 @@ class JSONObject constructor() : JSONValueBase() {
     }
 
     operator fun set(key: String, v: JSONValue?) {
+        if (key.isEmpty()) {
+            throw IllegalArgumentException("key must not be empty")
+        }
         map[key] = v ?: JSONPrimitiveValue()
     }
 
@@ -114,7 +117,7 @@ class JSONObject constructor() : JSONValueBase() {
     override fun formatToString(): String {
         val builder = StringBuilder()
         for ((key, value) in map) {
-            builder.append("\"$key\":$value,")
+            builder.append("\"${escapeString(key)}\":$value,")
         }
 
         if (builder.isNotEmpty()) {

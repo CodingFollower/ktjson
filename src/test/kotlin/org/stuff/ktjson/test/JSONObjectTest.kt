@@ -10,6 +10,14 @@ import kotlin.test.*
 
 class JSONObjectTest {
     @Test
+    fun formatTest() {
+        val str = "{\"key\\r\\n01\":\"hello\\tworld\"}"
+        val obj = JSONObject(str)
+        assertTrue("key\r\n01" in obj)
+        assertEquals(str, obj.formatToString())
+    }
+
+    @Test
     fun emptyTest() {
         perform(listOf(JSONObject("{}"), JSONObject("   {   }   "), JSONObject())) {
             assertEquals(0, it.allKeys.size)
@@ -121,5 +129,7 @@ class JSONObjectTest {
         obj["key"] = innerArray
         obj["key"].toJSONArray().add(0.001)
         assertEquals(0.001, obj["key"].toJSONArray()[0].toNumberValue())
+
+        assertFailsWith<IllegalArgumentException> { obj[""] = "value" }
     }
 }

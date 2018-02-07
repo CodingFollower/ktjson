@@ -65,6 +65,7 @@ fun serialize(v: Any?): JSONValue {
         isPrimitiveValue(v) -> serializePrimitive(v) ?: throw JSONSerializeFailedException("$v cannot be serialize to JSON")
         v is Iterable<*> -> serializeIterable(v)
         v is kotlin.Array<*> -> serializeArray(v)
+        v is Map<*, *> -> serializeMap(v)
         else -> serializeObject(v!!)
     }
 }
@@ -97,10 +98,6 @@ private fun serializeClass(cls: KClass<*>, instance: Any, obj: JSONObject) {
 private fun serializeObject(instance: Any): JSONObject {
     val obj = JSONObject()
     val cls = instance::class
-
-    if (!checkClassVisibility(cls.java)) {
-        throw JSONSerializeFailedException("$cls not access")
-    }
 
     serializeClass(cls, instance, obj)
     return obj
@@ -139,4 +136,12 @@ private fun serializeArray(array: kotlin.Array<*>): JSONArray {
     }
 
     return json
+}
+
+private fun serializeMap(map: Map<*, *>): JSONObject {
+    val obj = JSONObject()
+    for ((k, v) in map) {
+        obj["$k"] = serialize(v)
+    }
+    return obj
 }

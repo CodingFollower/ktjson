@@ -96,22 +96,7 @@ internal class JSONPrimitiveValue internal constructor() : JSONValueBase() {
     }
 
     private fun escapeString() : String {
-        if (stringValue.isEmpty()) {
-            return stringValue
-        }
-
-        val builder = StringBuilder(stringValue.length)
-        for (ch in stringValue) {
-            if (controlToCharMap.containsKey(ch)) {
-                builder.append('\\')
-                builder.append(controlToCharMap[ch])
-            }
-            else {
-                builder.append(ch)
-            }
-        }
-
-        return builder.toString()
+        return escapeString(stringValue)
     }
 
     override fun cloneValue(): JSONValue {

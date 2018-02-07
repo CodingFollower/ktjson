@@ -10,6 +10,25 @@ internal fun parseJSONAndCheckLeft(reader: JSONInputStreamReader, ignoreLeft: Bo
     }
 }
 
+internal fun escapeString(v: String) : String {
+    if (v.isEmpty()) {
+        return v
+    }
+
+    val builder = StringBuilder(v.length)
+    for (ch in v) {
+        if (controlToCharMap.containsKey(ch)) {
+            builder.append('\\')
+            builder.append(controlToCharMap[ch])
+        }
+        else {
+            builder.append(ch)
+        }
+    }
+
+    return builder.toString()
+}
+
 abstract class JSONValueBase : JSONValue {
     override var type: JSONType = JSONType.NULL
         protected set

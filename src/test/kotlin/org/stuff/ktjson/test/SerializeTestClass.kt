@@ -3,7 +3,66 @@ package org.stuff.ktjson.test
 import org.stuff.ktjson.serialization.JSONSerializeIgnore
 import org.stuff.ktjson.serialization.JSONSerializeKeyName
 
-class EmptyObject
+class CompositionTestClass {
+    var stringProperty = "string"
+    var objectProperty = ElementTestClass("object")
+    var listProperty = listOf(ElementTestClass("data1"),
+            ElementTestClass("data2"),
+            ElementTestClass("data3"))
+}
+
+class ElementTestClass(var property: String)
+
+open class NonserializablePropertyTestClass {
+    val readonlyProperty = "readonly"
+    var privateSetProperty = "private_set"
+        private set
+
+    private var privateProperty = "private"
+    protected var protectedProperty = "protected"
+    var nonFieldProperty
+        get() = privateProperty
+        set(value) {privateProperty = value}
+}
+
+var NonserializablePropertyTestClass.extProperty
+    get() = nonFieldProperty
+    set(value) {nonFieldProperty = value}
+
+open class BasicTestClass {
+    var nullableProperty: String? = null
+    var boolProperty = false
+    var intProperty = 10
+    var doubleProperty = 10.0
+    var stringProperty = "string"
+}
+
+class InheritTestClass : BasicTestClass() {
+    var inhertProperty = "inhert"
+}
+
+class RenamePropertyTestClass {
+    @JSONSerializeKeyName("rename_property")
+    var renameProperty = "rename"
+}
+
+class IgnorePropertyTestClass {
+    var property = "property"
+
+    @JSONSerializeIgnore
+    var ignoreProperty = "ignore"
+}
+
+@JSONSerializeIgnore
+open class IgnoreBaseTestClass {
+    var baseProperty = "base"
+}
+
+class InheritFromIgnoreTestClass : IgnoreBaseTestClass() {
+    var inheritProperty = "inherit"
+}
+
+class EmptyTestClass
 
 class InvalidObject(var name: String)
 
