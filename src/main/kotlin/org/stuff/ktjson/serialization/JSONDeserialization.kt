@@ -11,7 +11,7 @@ import kotlin.reflect.full.safeCast
 import kotlin.reflect.jvm.javaSetter
 
 fun<T : Any> deserialize(cls: KClass<T>, obj: JSONObject): T {
-    val constructor = cls.constructors.find { it.parameters.isEmpty() }
+    val constructor = getCallableConstructor(cls)
             ?: throw JSONDeserializeFailedException("$cls must has a constructor without parameters")
     val instance = constructor.call()
     walkClassSerializableProperty(cls, instance) {

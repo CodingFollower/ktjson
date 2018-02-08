@@ -11,7 +11,13 @@ class CompositionTestClass {
             ElementTestClass("data3"))
 }
 
-class ElementTestClass(var property: String)
+class ElementTestClass() {
+    var property = ""
+
+    constructor(p: String): this() {
+        property = p
+    }
+}
 
 open class NonserializablePropertyTestClass {
     val readonlyProperty = "readonly"
@@ -35,10 +41,14 @@ open class BasicTestClass {
     var intProperty = 10
     var doubleProperty = 10.0
     var stringProperty = "string"
+
+    open var baseProperty = "base"
 }
 
 class InheritTestClass : BasicTestClass() {
     var inhertProperty = "inhert"
+
+    override var baseProperty = "override"
 }
 
 class RenamePropertyTestClass {
@@ -62,20 +72,17 @@ class InheritFromIgnoreTestClass : IgnoreBaseTestClass() {
     var inheritProperty = "inherit"
 }
 
-class EmptyTestClass
+class NonDefaultConstructorTestClass(var name: String)
 
-class InvalidObject(var name: String)
+class LateinitPropertyTestClass {
+    lateinit var lateinitProperty: ElementTestClass
 
-open class IgnoreClass1 {
-    var ignoreProperty1 = "ignore1"
+    fun init() {
+        lateinitProperty = ElementTestClass("lateinit")
+    }
 }
 
-@JSONSerializeIgnore
-open class IgnoreClass2 : IgnoreClass1() {
-    var ignoreProperty2 = "ignore2"
-}
-
-open class TestObjectBase : IgnoreClass2() {
+open class TestObjectBase {
     var boolProperty = false
     var strProperty: String = "str"
     var intProperty: Int = 10

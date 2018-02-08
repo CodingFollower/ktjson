@@ -38,7 +38,7 @@ class JSONDeserializationTest {
 
     @Test
     fun invalidTest() {
-        assertFailsWith<JSONDeserializeFailedException> { deserialize(InvalidObject::class, JSONObject()) }
+        assertFailsWith<JSONDeserializeFailedException> { deserialize(NonDefaultConstructorTestClass::class, JSONObject()) }
 
         var obj = createJSONObject()
         obj["doubleProperty"] = true

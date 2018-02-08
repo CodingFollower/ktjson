@@ -4,6 +4,7 @@ import org.stuff.ktjson.*
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import kotlin.reflect.KClass
+import kotlin.reflect.KFunction
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KProperty
 import kotlin.reflect.full.*
@@ -55,9 +56,8 @@ internal fun checkMethodVisibility(call: Method): Boolean {
     return Modifier.isPublic(m) && !Modifier.isStatic(m)
 }
 
-internal fun checkClassVisibility(cls: Class<*>): Boolean {
-    val m = cls.modifiers
-    return Modifier.isPublic(m) && !Modifier.isStatic(m)
+internal fun<T: Any> getCallableConstructor(cls: KClass<T>): KFunction<T>? {
+    return cls.constructors.find { it.parameters.isEmpty() }
 }
 
 fun serialize(v: Any?): JSONValue {
@@ -71,6 +71,10 @@ fun serialize(v: Any?): JSONValue {
 }
 
 private fun serializeOnClass(cls: KClass<*>, instance: Any, obj: JSONObject) {
+    if (getCallableConstructor(cls) == null) {
+        throw JSONSerializeFailedException("$cls must has a constructor without parameters")
+    }
+
     walkClassSerializableProperty(cls, instance) {
         inst, p ->
         val name = getPropertyName(p)
