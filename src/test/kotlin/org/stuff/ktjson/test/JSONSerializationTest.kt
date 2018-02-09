@@ -95,27 +95,27 @@ class JSONSerializationTest {
     }
 
     @Test
-    fun basicClassSerializeTest() {
-        var obj = BasicTestClass()
-        var json = serialize(obj).toJSONObject()
-        assertTrue(json["nullableProperty"].isNull())
-        assertEquals(obj.boolProperty, json["boolProperty"].toBooleanValue())
-        assertEquals(obj.intProperty, json["intProperty"].toNumberValue().toInt())
-        assertEquals(obj.doubleProperty, json["doubleProperty"].toNumberValue())
-        assertEquals(obj.stringProperty, json["stringProperty"].toStringValue())
-    }
-
-    @Test
     fun inheritClassSerializeTest() {
-        var obj: BasicTestClass = InheritTestClass()
-        var json = serialize(obj).toJSONObject()
-        assertTrue(json["nullableProperty"].isNull())
-        assertEquals(obj.boolProperty, json["boolProperty"].toBooleanValue())
-        assertEquals(obj.intProperty, json["intProperty"].toNumberValue().toInt())
-        assertEquals(obj.doubleProperty, json["doubleProperty"].toNumberValue())
-        assertEquals(obj.stringProperty, json["stringProperty"].toStringValue())
-        assertEquals((obj as InheritTestClass).inhertProperty, json["inhertProperty"].toStringValue())
-        assertEquals("override", json["baseProperty"].toStringValue())
+        var obj = BasicTestClass()
+        var baseJson = serialize(obj).toJSONObject()
+        assertTrue(baseJson["nullableProperty"].isNull())
+        assertEquals(obj.boolProperty, baseJson["boolProperty"].toBooleanValue())
+        assertEquals(obj.intProperty, baseJson["intProperty"].toNumberValue().toInt())
+        assertEquals(obj.doubleProperty, baseJson["doubleProperty"].toNumberValue())
+        assertEquals(obj.stringProperty, baseJson["stringProperty"].toStringValue())
+        assertEquals("base", baseJson["baseProperty"].toStringValue())
+        assertTrue("baseReadonlyProperty" !in baseJson)
+
+        var inherit: BasicTestClass = InheritTestClass()
+        var inheritJson = serialize(inherit).toJSONObject()
+        assertTrue(inheritJson["nullableProperty"].isNull())
+        assertEquals(inherit.boolProperty, inheritJson["boolProperty"].toBooleanValue())
+        assertEquals(inherit.intProperty, inheritJson["intProperty"].toNumberValue().toInt())
+        assertEquals(inherit.doubleProperty, inheritJson["doubleProperty"].toNumberValue())
+        assertEquals(inherit.stringProperty, inheritJson["stringProperty"].toStringValue())
+        assertEquals((inherit as InheritTestClass).inheritProperty, inheritJson["inheritProperty"].toStringValue())
+        assertEquals("override", inheritJson["baseProperty"].toStringValue())
+        assertEquals("override_readwrite", inheritJson["baseReadonlyProperty"].toStringValue())
     }
 
     @Test

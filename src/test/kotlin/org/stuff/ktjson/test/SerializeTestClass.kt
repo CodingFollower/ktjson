@@ -43,12 +43,14 @@ open class BasicTestClass {
     var stringProperty = "string"
 
     open var baseProperty = "base"
+    open val baseReadonlyProperty = "base_readonly"
 }
 
 class InheritTestClass : BasicTestClass() {
-    var inhertProperty = "inhert"
+    var inheritProperty = "inherit"
 
     override var baseProperty = "override"
+    override var baseReadonlyProperty = "override_readwrite"
 }
 
 class RenamePropertyTestClass {
@@ -88,6 +90,10 @@ open class TestObjectBase {
     var intProperty: Int = 10
 
     protected var protectedProperty = "protected"
+}
+
+class DelegatePropertyTestClass {
+
 }
 
 class TestObject : TestObjectBase() {
