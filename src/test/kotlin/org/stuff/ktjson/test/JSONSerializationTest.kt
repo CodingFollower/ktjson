@@ -1,9 +1,11 @@
 package org.stuff.ktjson.test
 
 import org.junit.Test
-import org.stuff.ktjson.serialization.JSONSerializeFailedException
-import org.stuff.ktjson.serialization.serialize
+import org.stuff.ktjson.serialization.*
 import java.lang.reflect.InvocationTargetException
+import kotlin.properties.ReadOnlyProperty
+import kotlin.properties.ReadWriteProperty
+import kotlin.reflect.KProperty
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
@@ -27,7 +29,7 @@ class JSONSerializationTest {
 
         obj.init()
         val json = serialize(obj).toJSONObject()
-        assertEquals(obj.lateinitProperty.property, json["lateinitProperty"].toJSONObject()["property"].toStringValue())
+        assertEquals(obj.lateinitProperty, json["lateinitProperty"].toStringValue())
     }
 
     @Test
@@ -88,10 +90,19 @@ class JSONSerializationTest {
     fun mapSerializeTest() {
         val map = mapOf("key1" to "value1", "key2" to "value2")
         val mapJson = serialize(map).toJSONObject()
-        assertEquals(map.size, mapJson.allKeys.size)
+        assertEquals(map.size, mapJson.size)
         for ((k, v) in map) {
             assertEquals(v, mapJson[k].toStringValue())
         }
+    }
+
+    @Test
+    fun jsonobjectOfTest() {
+        val json = jsonobjectOf("key1" to "value1", "key2" to 0.1, "key3" to ElementTestClass("element"))
+        assertEquals(3, json.size)
+        assertEquals("value1", json["key1"].toStringValue())
+        assertEquals(0.1, json["key2"].toNumberValue())
+        assertEquals("element", json["key3"].toJSONObject()["property"].toStringValue())
     }
 
     @Test
@@ -120,6 +131,11 @@ class JSONSerializationTest {
 
     @Test
     fun renamePropertySerializeTest() {
+        class RenamePropertyTestClass {
+            @JSONSerializeKeyName("rename_property")
+            var renameProperty = "rename"
+        }
+
         val obj = RenamePropertyTestClass()
         val json = serialize(obj).toJSONObject()
         assertTrue("renameProperty" !in json)
@@ -128,6 +144,13 @@ class JSONSerializationTest {
 
     @Test
     fun ignorePropertySerializeTest() {
+        class IgnorePropertyTestClass {
+            var property = "property"
+
+            @JSONSerializeIgnore
+            var ignoreProperty = "ignore"
+        }
+
         val obj = IgnorePropertyTestClass()
         val json = serialize(obj).toJSONObject()
         assertEquals(obj.property, json["property"].toStringValue())
@@ -136,9 +159,48 @@ class JSONSerializationTest {
 
     @Test
     fun ignoreClassSerializeTest() {
+        @JSONSerializeIgnore
+        open class IgnoreBaseTestClass {
+            var baseProperty = "base"
+        }
+
+        class InheritFromIgnoreTestClass : IgnoreBaseTestClass() {
+            var inheritProperty = "inherit"
+        }
+
         val obj = InheritFromIgnoreTestClass()
         val json = serialize(obj).toJSONObject()
         assertTrue("baseProperty" !in json)
         assertEquals(obj.inheritProperty, json["inheritProperty"].toStringValue())
+    }
+
+
+    class DelegatePropertyTestClass {
+        var property by PropertyDelegate()
+        val readonlyProperty by ReadOnlyPropertyDelegate()
+    }
+
+    class PropertyDelegate : ReadWriteProperty<DelegatePropertyTestClass, String> {
+        override fun getValue(thisRef: DelegatePropertyTestClass, property: KProperty<*>): String {
+            return "getValue"
+        }
+
+        override fun setValue(thisRef: DelegatePropertyTestClass, property: KProperty<*>, value: String) {
+            print(value)
+        }
+    }
+
+    class ReadOnlyPropertyDelegate : ReadOnlyProperty<DelegatePropertyTestClass, String> {
+        override fun getValue(thisRef: DelegatePropertyTestClass, property: KProperty<*>): String {
+            return "getValue"
+        }
+    }
+
+    @Test
+    fun delegatePropertySerializeTest() {
+        val obj = DelegatePropertyTestClass()
+        val json = serialize(obj).toJSONObject()
+        assertEquals(obj.property, json["property"].toStringValue())
+        assertFalse("readonlyProperty" in json)
     }
 }

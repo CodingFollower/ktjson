@@ -30,6 +30,14 @@ class JSONObjectTest {
     }
 
     @Test
+    fun emptyKeyTest() {
+        val obj = JSONObject()
+        obj[""] = "empty"
+        assertTrue("" in obj)
+        assertEquals("empty", obj[""].toStringValue())
+    }
+
+    @Test
     fun deleteKeyTest() {
         val str = """
             |{
@@ -129,7 +137,5 @@ class JSONObjectTest {
         obj["key"] = innerArray
         obj["key"].toJSONArray().add(0.001)
         assertEquals(0.001, obj["key"].toJSONArray()[0].toNumberValue())
-
-        assertFailsWith<IllegalArgumentException> { obj[""] = "value" }
     }
 }

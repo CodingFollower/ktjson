@@ -11,6 +11,9 @@ class JSONObject constructor() : JSONValueBase() {
     val allKeys: Set<String>
         get() = map.keys
 
+    val size: Int
+        get() = allKeys.size
+
     val isEmpty: Boolean
         get() = allKeys.isEmpty()
 
@@ -96,9 +99,6 @@ class JSONObject constructor() : JSONValueBase() {
     }
 
     operator fun set(key: String, v: JSONValue?) {
-        if (key.isEmpty()) {
-            throw IllegalArgumentException("key must not be empty")
-        }
         map[key] = v ?: JSONPrimitiveValue()
     }
 

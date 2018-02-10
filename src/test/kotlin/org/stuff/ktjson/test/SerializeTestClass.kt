@@ -53,34 +53,13 @@ class InheritTestClass : BasicTestClass() {
     override var baseReadonlyProperty = "override_readwrite"
 }
 
-class RenamePropertyTestClass {
-    @JSONSerializeKeyName("rename_property")
-    var renameProperty = "rename"
-}
-
-class IgnorePropertyTestClass {
-    var property = "property"
-
-    @JSONSerializeIgnore
-    var ignoreProperty = "ignore"
-}
-
-@JSONSerializeIgnore
-open class IgnoreBaseTestClass {
-    var baseProperty = "base"
-}
-
-class InheritFromIgnoreTestClass : IgnoreBaseTestClass() {
-    var inheritProperty = "inherit"
-}
-
 class NonDefaultConstructorTestClass(var name: String)
 
 class LateinitPropertyTestClass {
-    lateinit var lateinitProperty: ElementTestClass
+    lateinit var lateinitProperty: String
 
     fun init() {
-        lateinitProperty = ElementTestClass("lateinit")
+        lateinitProperty = "lateinit"
     }
 }
 
@@ -90,10 +69,6 @@ open class TestObjectBase {
     var intProperty: Int = 10
 
     protected var protectedProperty = "protected"
-}
-
-class DelegatePropertyTestClass {
-
 }
 
 class TestObject : TestObjectBase() {

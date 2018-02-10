@@ -5,6 +5,7 @@ import org.stuff.ktjson.JSONArray
 import org.stuff.ktjson.JSONObject
 import org.stuff.ktjson.serialization.JSONDeserializeFailedException
 import org.stuff.ktjson.serialization.deserialize
+import org.stuff.ktjson.serialization.jsonobjectOf
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
@@ -37,16 +38,41 @@ class JSONDeserializationTest {
     }
 
     @Test
-    fun invalidTest() {
+    fun lateinitPropertyDeserializeTest() {
+        val json = jsonobjectOf("lateinitProperty" to "string")
+        val obj = deserialize(LateinitPropertyTestClass::class, json)
+        assertEquals(json["lateinitProperty"].toStringValue(), obj.lateinitProperty)
+    }
+
+    @Test
+    fun nonDefaultConstructorTest() {
         assertFailsWith<JSONDeserializeFailedException> { deserialize(NonDefaultConstructorTestClass::class, JSONObject()) }
+    }
 
-        var obj = createJSONObject()
-        obj["doubleProperty"] = true
-        assertFailsWith<JSONDeserializeFailedException> { deserialize(TestObject::class, obj) }
+    @Test
+    fun invalidValueTypeTest() {
+        class InvalidPropertyTypeTestClass {
+            var doubleProperty = 0.1
+        }
 
-        obj = createJSONObject()
-        obj["doubleProperty"] = null
-        assertFailsWith<JSONDeserializeFailedException> { deserialize(TestObject::class, obj) }
+        val obj = jsonobjectOf("doubleProperty" to 0.1)
+        deserialize(InvalidPropertyTypeTestClass::class, obj)
+
+        obj["doubleProperty"] = "text"
+        assertFailsWith<JSONDeserializeFailedException> { deserialize(InvalidPropertyTypeTestClass::class, obj) }
+    }
+
+    @Test
+    fun missPropertyTest() {
+        class MissPropertyTestClass {
+            var property = "property"
+        }
+
+        val obj = jsonobjectOf("property" to "string")
+        assertEquals(obj["property"].toStringValue(), deserialize(MissPropertyTestClass::class, obj).property)
+
+        obj.delete("property")
+        assertFailsWith<JSONDeserializeFailedException> { deserialize(MissPropertyTestClass::class, obj) }
     }
 
     @Test

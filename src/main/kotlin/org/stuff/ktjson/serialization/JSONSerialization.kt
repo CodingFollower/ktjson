@@ -13,6 +13,15 @@ import kotlin.reflect.jvm.javaField
 import kotlin.reflect.jvm.javaGetter
 import kotlin.reflect.jvm.javaSetter
 
+fun<V> jsonobjectOf(vararg pairs: Pair<String, V>): JSONObject {
+    val obj = JSONObject()
+    pairs.map {
+        obj[it.first] = serialize(it.second)
+    }
+
+    return obj
+}
+
 internal fun walkClassSerializableProperty(cls: KClass<*>, instance: Any, block: (Any, KProperty<*>) -> Unit) {
     val properties = cls.declaredMemberProperties
     properties.map {
