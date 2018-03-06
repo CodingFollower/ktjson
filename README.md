@@ -1,2 +1,0 @@
-# ktjson
-kotlin json
