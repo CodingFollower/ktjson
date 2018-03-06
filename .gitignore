@@ -1,0 +1,14 @@
+.idea
+*.iml
+
+.vscode
+
+.classpath
+.project
+.settings
+
+out
+build
+bin
+
+.gradle
