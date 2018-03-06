@@ -31,18 +31,45 @@ internal class JSONPrimitiveValue internal constructor() : JSONValueBase() {
 
     private  fun parseValue(reader: JSONInputStreamReader) {
         val ch = reader.readFirstUnspaceChar()
-        if (ch == '\"') {
-            initStringValue(reader.readString())
-        }
-        else {
-            val v = reader.readNextValidValue()
-            when(v) {
-                "null" -> type = JSONType.NULL
-                "true" -> initBooleanValue(true)
-                "false" -> initBooleanValue(false)
-                else -> initNumberValue(reader.position, v)
+        when (ch) {
+            '\"' -> initStringValue(reader.readString())
+            'n' -> parseNull(reader)
+            't' -> parseTrue(reader)
+            'f' -> parseFalse(reader)
+            else -> {
+                val v = reader.readNextValidValue()
+                initNumberValue(reader.position, v)
             }
         }
+    }
+
+    private fun parseNull(reader: JSONInputStreamReader) {
+        if (!checkNextString(reader, "null")) {
+            throw InvalidJSONFormatException(reader.position, "invalid null value")
+        }
+
+        type = JSONType.NULL
+    }
+
+    private fun parseTrue(reader: JSONInputStreamReader) {
+        if (!checkNextString(reader, "true")) {
+            throw InvalidJSONFormatException(reader.position, "invalid true value")
+        }
+
+        initBooleanValue(true)
+    }
+
+    private fun parseFalse(reader: JSONInputStreamReader) {
+        if (!checkNextString(reader, "false")) {
+            throw InvalidJSONFormatException(reader.position, "invalid false value")
+        }
+
+        initBooleanValue(false)
+    }
+
+    private fun checkNextString(reader: JSONInputStreamReader, expect: String): Boolean {
+        val v = reader.readNextValidValue(expect.length)
+        return v == expect
     }
 
     private fun initStringValue(v: String) {

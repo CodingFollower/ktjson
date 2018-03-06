@@ -48,7 +48,7 @@ internal class JSONInputStreamReader(stream : InputStream, private val charset: 
         }
     }
 
-    fun readNextValidValue(): String {
+    fun readNextValidValue(count: Int = -1): String {
         val builder = StringBuilder()
         readFirstUnspaceChar()
         do {
@@ -61,6 +61,10 @@ internal class JSONInputStreamReader(stream : InputStream, private val charset: 
             builder.append(ch)
 
             if (readNextChar() == -1) {
+                break
+            }
+
+            if (count > 0 && builder.length == count) {
                 break
             }
 
